@@ -17,6 +17,7 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.yeahdev.yeahstreamer.R;
+import com.yeahdev.yeahstreamer.activities.MainActivity;
 import com.yeahdev.yeahstreamer.util.Constants;
 
 import java.io.IOException;
@@ -159,6 +160,10 @@ public class StreamService extends Service implements
         builder.addAction(action);
         builder.addAction(generateAction(R.drawable.ic_stop_24dp, "Stop", Constants.ACTION_STOP));
         style.setShowActionsInCompactView(0, 1);
+
+        Intent openAppIntent = new Intent(getApplicationContext(), MainActivity.class);
+        PendingIntent openAppPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, openAppIntent, 0);
+        builder.setContentIntent(openAppPendingIntent);
 
         builder.setAutoCancel(false);
         Notification notification = builder.build();

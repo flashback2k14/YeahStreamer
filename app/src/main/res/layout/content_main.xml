@@ -24,10 +24,12 @@
         android:background="#333333"
         android:theme="@style/Base.ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <ImageView
+        <com.mikhaellopez.circularimageview.CircularImageView
             android:id="@+id/selected_track_image"
             android:layout_width="48dp"
-            android:layout_height="48dp"/>
+            android:layout_height="48dp"
+            app:civ_border="true"
+            app:civ_border_color="@color/colorPrimaryDark"/>
 
         <TextView
             android:id="@+id/selected_track_title"

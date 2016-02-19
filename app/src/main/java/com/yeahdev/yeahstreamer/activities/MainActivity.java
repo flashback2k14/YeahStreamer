@@ -4,12 +4,18 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.PersistableBundle;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -18,16 +24,17 @@ import android.widget.TextView;
 
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.adapter.RadioStationAdapter;
+import com.yeahdev.yeahstreamer.model.Dummy;
 import com.yeahdev.yeahstreamer.model.RadioStation;
 import com.yeahdev.yeahstreamer.services.StreamService;
 import com.yeahdev.yeahstreamer.util.Constants;
+import com.yeahdev.yeahstreamer.util.UrlLoader;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
-
-    private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private ArrayList<RadioStation> mStationList;
     private RadioStationAdapter mStationAdapter;
@@ -77,6 +84,12 @@ public class MainActivity extends AppCompatActivity {
         mStationListview.setAdapter(mStationAdapter);
     }
 
+    private void loadRadioStations() {
+        mStationList.clear();
+        mStationList.addAll(new Dummy(this).getCollection());
+        mStationAdapter.notifyDataSetChanged();
+    }
+
     private void setupListener() {
         mStationListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -100,8 +113,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (mIsPlaying) {
                     Intent intent = new Intent(MainActivity.this, StreamService.class);
-                    intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
-                    intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
                     intent.setAction(Constants.ACTION_PAUSE);
                     startService(intent);
                 } else {
@@ -113,6 +124,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        mPlayerSelectedIcon.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(MainActivity.this, StreamService.class);
+                intent.setAction(Constants.ACTION_STOP);
+                startService(intent);
+                return true;
+            }
+        });
     }
 
     private void setupBroadcastReceiver() {
@@ -120,10 +141,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 mIsPlaying = true;
-                mTbPlayer.setVisibility(View.VISIBLE);
                 mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(mCurrentRadioStation.getIcon(), 0, mCurrentRadioStation.getIcon().length));
                 mPlayerSelectedName.setText(mCurrentRadioStation.getName());
                 mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
+                mTbPlayer.setVisibility(View.VISIBLE);
             }
         };
         IntentFilter playbackStartedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_STARTED);
@@ -154,27 +175,42 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(playbackStoppedReceiver, playbackStoppedFilter);
     }
 
-    private void loadRadioStations() {
-        RadioStation radioStation = new RadioStation();
-        radioStation.setIcon(createPlaceholderIcon());
-        radioStation.setName("Radio Fritz");
-        radioStation.setUrl("http://fritz.de/livemp3");
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-        RadioStation radioStation1 = new RadioStation();
-        radioStation1.setIcon(createPlaceholderIcon());
-        radioStation1.setName("MDR Info");
-        radioStation1.setUrl("http://c22033-ls.i.core.cdn.streamfarm.net/QpZptC4ta9922033/22033mdr/live/app2128740352/w2128904192/live_de_56.mp3");
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        mStationList.clear();
-        mStationList.add(radioStation);
-        mStationList.add(radioStation1);
-        mStationAdapter.notifyDataSetChanged();
+        mIsPlaying = preferences.getBoolean(Constants.CURRENT_PLAYING_STATE, false);
+        if (preferences.contains(Constants.CURRENT_RADIO_STATION_ICON)) {
+            RadioStation tmp = new RadioStation();
+
+            tmp.setIcon(Base64.decode(preferences.getString(Constants.CURRENT_RADIO_STATION_ICON, ""), Base64.DEFAULT));
+            tmp.setName(preferences.getString(Constants.CURRENT_RADIO_STATION_NAME, ""));
+            tmp.setUrl(preferences.getString(Constants.CURRENT_RADIO_STATION_URL, ""));
+
+            mCurrentRadioStation = tmp;
+        }
+
+        if (mIsPlaying) {
+            mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(mCurrentRadioStation.getIcon(), 0, mCurrentRadioStation.getIcon().length));
+            mPlayerSelectedName.setText(mCurrentRadioStation.getName());
+            mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
+            mTbPlayer.setVisibility(View.VISIBLE);
+        }
     }
 
-    private byte[] createPlaceholderIcon() {
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-        return stream.toByteArray();
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putBoolean(Constants.CURRENT_PLAYING_STATE, mIsPlaying);
+        if (mCurrentRadioStation != null) {
+            editor.putString(Constants.CURRENT_RADIO_STATION_ICON, Base64.encodeToString(mCurrentRadioStation.getIcon(), Base64.DEFAULT));
+            editor.putString(Constants.CURRENT_RADIO_STATION_NAME, mCurrentRadioStation.getName());
+            editor.putString(Constants.CURRENT_RADIO_STATION_URL, mCurrentRadioStation.getUrl());
+        }
+        editor.apply();
     }
 }

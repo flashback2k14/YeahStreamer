@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/activity_horizontal_margin_half">
 
-    <ImageView
+    <com.mikhaellopez.circularimageview.CircularImageView
         android:id="@+id/rsImage"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_gravity="center_vertical|center_horizontal"/>
+        android:layout_gravity="center_vertical|center_horizontal"
+        app:civ_border="true"
+        app:civ_border_color="@color/colorPrimaryDark"/>
 
     <TextView
         android:id="@+id/rsName"
