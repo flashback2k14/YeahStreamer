@@ -1,4 +1,14 @@
 <resources>
     <string name="app_name">Yeah! Streamer</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_logout">Logout</string>
+
+    <string name="email">Email-Address&#8230;</string>
+    <string name="pw">Password&#8230;</string>
+    <string name="pwa">Password again&#8230;</string>
+    <string name="login">Log In</string>
+    <string name="signin">Sign In</string>
+    <string name="gtLogin">Go To Login</string>
+    <string name="register">Go To Register</string>
+
+    <string name="signinToMain">SignInToMainActivity</string>
 </resources>

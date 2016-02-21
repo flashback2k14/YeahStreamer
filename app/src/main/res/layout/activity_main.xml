@@ -20,6 +20,13 @@
             android:background="@color/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar2"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+
     </android.support.design.widget.AppBarLayout>
 
     <include layout="@layout/content_main"/>
@@ -29,7 +36,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_add_24dp" />
+        android:layout_marginTop="84dp"
+        android:layout_marginRight="@dimen/fab_margin"
+        android:src="@drawable/ic_add_24dp"
+        android:transitionName="@string/signinToMain"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -22,4 +22,6 @@ public class Constants {
     public static final String CURRENT_RADIO_STATION_ICON = "CURRENT_RADIO_STATION_ICON";
     public static final String CURRENT_RADIO_STATION_NAME = "CURRENT_RADIO_STATION_NAME";
     public static final String CURRENT_RADIO_STATION_URL = "CURRENT_RADIO_STATION_URL";
+
+    public static final String FIREBASE_REF = "https://yeah-streamer.firebaseio.com/";
 }

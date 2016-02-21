@@ -1,10 +1,12 @@
 package com.yeahdev.yeahstreamer.activities;
 
+import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,8 +16,10 @@ import android.widget.Toast;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.yeahdev.yeahstreamer.BuildConfig;
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.model.User;
+import com.yeahdev.yeahstreamer.util.Constants;
 
 
 public class SignInActivity extends AppCompatActivity {
@@ -34,8 +38,15 @@ public class SignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        initComponents();
-        setupListener();
+        AuthData mAuth = new Firebase(Constants.FIREBASE_REF).getAuth();
+
+        if (mAuth != null) {
+            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+            SignInActivity.this.finish();
+        } else {
+            initComponents();
+            setupListener();
+        }
     }
 
     private void initComponents() {
@@ -45,7 +56,6 @@ public class SignInActivity extends AppCompatActivity {
         btnSignIn = (Button) findViewById(R.id.btnSignIn);
         btnRegister = (Button) findViewById(R.id.btnRegister);
         tvRegister = (TextView) findViewById(R.id.tvRegister);
-        tvRegister.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     private void setupListener() {
@@ -56,13 +66,13 @@ public class SignInActivity extends AppCompatActivity {
                     etPasswordAgain.setVisibility(View.VISIBLE);
                     btnRegister.setVisibility(View.VISIBLE);
                     btnSignIn.setVisibility(View.GONE);
-                    tvRegister.setText("Go to Login");
+                    tvRegister.setText(getResources().getString(R.string.gtLogin));
                     isLogin = false;
                 } else {
                     etPasswordAgain.setVisibility(View.GONE);
                     btnRegister.setVisibility(View.GONE);
                     btnSignIn.setVisibility(View.VISIBLE);
-                    tvRegister.setText("Go To Register");
+                    tvRegister.setText(getResources().getString(R.string.register));
                     isLogin = true;
                 }
             }
@@ -84,14 +94,23 @@ public class SignInActivity extends AppCompatActivity {
                     return;
                 }
 
-                Firebase mRef = new Firebase("https://yeah-streamer.firebaseio.com/");
+                Firebase mRef = new Firebase(Constants.FIREBASE_REF);
                 mRef.authWithPassword(emailAddress, password, new Firebase.AuthResultHandler() {
                     @Override
                     public void onAuthenticated(AuthData authData) {
                         etEmailAddress.setText("");
                         etPassword.setText("");
 
-                        startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                            View view = btnSignIn;
+                            String transitionName = getResources().getString(R.string.signinToMain);
+                            ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(SignInActivity.this, view, transitionName);
+                            startActivity(intent, activityOptions.toBundle());
+                        } else {
+                            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                        }
+
                         SignInActivity.this.finish();
                     }
 
@@ -132,7 +151,7 @@ public class SignInActivity extends AppCompatActivity {
                     return;
                 }
 
-                final Firebase mRef = new Firebase("https://yeah-streamer.firebaseio.com/");
+                final Firebase mRef = new Firebase(Constants.FIREBASE_REF);
                 mRef.createUser(emailAddress, password, new Firebase.ResultHandler() {
                     @Override
                     public void onSuccess() {
@@ -158,7 +177,16 @@ public class SignInActivity extends AppCompatActivity {
                                             etPassword.setText("");
                                             etPasswordAgain.setText("");
 
-                                            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                                Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                                                View view = btnSignIn;
+                                                String transitionName = getResources().getString(R.string.signinToMain);
+                                                ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(SignInActivity.this, view, transitionName);
+                                                startActivity(intent, activityOptions.toBundle());
+                                            } else {
+                                                startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                                            }
+
                                             SignInActivity.this.finish();
                                         }
                                     }
