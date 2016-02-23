@@ -38,11 +38,8 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_in);
 
         AuthData mAuth = new Firebase(Constants.FIREBASE_REF).getAuth();
-
         if (mAuth != null) {
-            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-            intent.putExtra(Constants.FIREBASE_UID, mAuth.getUid());
-            startActivity(intent);
+            startActivity(new Intent(SignInActivity.this, MainActivity.class));
             SignInActivity.this.finish();
         } else {
             initComponents();
@@ -104,14 +101,12 @@ public class SignInActivity extends AppCompatActivity {
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                            intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
                             View view = btnSignIn;
                             String transitionName = getResources().getString(R.string.signinToMain);
                             ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(SignInActivity.this, view, transitionName);
                             startActivity(intent, activityOptions.toBundle());
                         } else {
                             Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                            intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
                             startActivity(intent);
                         }
 
@@ -183,14 +178,12 @@ public class SignInActivity extends AppCompatActivity {
 
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                                 Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                                                intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
                                                 View view = btnSignIn;
                                                 String transitionName = getResources().getString(R.string.signinToMain);
                                                 ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(SignInActivity.this, view, transitionName);
                                                 startActivity(intent, activityOptions.toBundle());
                                             } else {
                                                 Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                                                intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
                                                 startActivity(intent);
                                             }
 

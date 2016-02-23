@@ -5,12 +5,14 @@ public class RadioStation {
     private String mIcon;
     private String mName;
     private String mUrl;
+    private String mKey;
 
     public RadioStation() {}
-    public RadioStation(String icon, String name, String url) {
+    public RadioStation(String icon, String name, String url, String key) {
         this.mIcon = icon;
         this.mName = name;
         this.mUrl = url;
+        this.mKey = key;
     }
 
     public String getIcon() {
@@ -32,5 +34,12 @@ public class RadioStation {
     }
     public void setUrl(String url) {
         this.mUrl = url;
+    }
+
+    public String getKey() {
+        return mKey;
+    }
+    public void setKey(String key) {
+        this.mKey = key;
     }
 }

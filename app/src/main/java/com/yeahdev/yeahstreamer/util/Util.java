@@ -38,7 +38,7 @@ public class Util {
         }
     }
 
-    public static RadioStation getRadioStation(Context context, String name, String url) {
+    public static RadioStation getRadioStation(Context context, String name, String url, String key) {
         String ext = Util.getFileExtension(new File(url));
         String urlSave = "";
 
@@ -67,6 +67,7 @@ public class Util {
         radioStation.setIcon(Base64.encodeToString(Util.createPlaceholderIcon(context),Base64.DEFAULT));
         radioStation.setName(name);
         radioStation.setUrl(urlSave);
+        radioStation.setKey(key);
 
         return radioStation;
     }

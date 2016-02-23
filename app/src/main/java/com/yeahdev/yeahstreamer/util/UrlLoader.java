@@ -1,25 +1,18 @@
 package com.yeahdev.yeahstreamer.util;
 
-
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 
 public class UrlLoader extends AsyncTask<String, Void, String> {
-    HttpClient httpClient;
-    HttpGet getRequest;
-    HttpResponse httpResponse;
     String result;
     boolean isM3u;
 
@@ -28,36 +21,23 @@ public class UrlLoader extends AsyncTask<String, Void, String> {
     protected void onPreExecute() {
         super.onPreExecute();
 
-        httpClient = new DefaultHttpClient();
-        getRequest = null;
-        httpResponse = null;
         result = "";
+        isM3u = false;
     }
 
     @Override
     protected String doInBackground(String... params) {
 
+        HttpURLConnection urlConnection = null;
         isM3u = params[0].equals("m3u");
 
         try {
-            getRequest = new HttpGet(params[1]);
-            httpResponse = httpClient.execute(getRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            URL url = new URL(params[1]);
+            urlConnection = (HttpURLConnection) url.openConnection();
 
-        if (httpResponse != null) {
-            if (httpResponse.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                Log.e(UrlLoader.class.getSimpleName(), "Response Error!");
-            } else {
-                InputStream inputStream = null;
+            if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
 
-                try {
-                    inputStream = httpResponse.getEntity().getContent();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
+                InputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
 
@@ -69,8 +49,6 @@ public class UrlLoader extends AsyncTask<String, Void, String> {
                             } else if (line.length() > 0) {
                                 if (line.startsWith("http://")) {
                                     result = line;
-                                } else {
-                                    result = getRequest.getURI().resolve(line).toString();
                                 }
                             }
                         } else {
@@ -92,6 +70,14 @@ public class UrlLoader extends AsyncTask<String, Void, String> {
                         e.printStackTrace();
                     }
                 }
+            } else {
+                Log.e(UrlLoader.class.getSimpleName(), "Response Error!");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
             }
         }
 
