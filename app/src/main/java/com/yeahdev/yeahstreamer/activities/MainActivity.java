@@ -31,8 +31,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.ChildEventListener;
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.adapter.RadioStationAdapter;
 import com.yeahdev.yeahstreamer.model.Dummy;
@@ -113,9 +117,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadRadioStations() {
-        mStationList.clear();
-        mStationList.addAll(new Dummy(this).getCollection());
-        mStationAdapter.notifyDataSetChanged();
+        AuthData authData = new Firebase(Constants.FIREBASE_REF).getAuth();
+        if (authData != null) {
+            Firebase mRef = new Firebase(Constants.FIREBASE_REF).child("radiostations").child(mUserId);
+            mRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    mStationList.clear();
+
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        RadioStation radioStation = snapshot.getValue(RadioStation.class);
+                        mStationList.add(radioStation);
+                        mStationAdapter.notifyDataSetChanged();
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    Toast.makeText(MainActivity.this, "The read failed: " + firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        } else {
+            Toast.makeText(MainActivity.this, "User loggin expired!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+            MainActivity.this.finish();
+        }
+
+        //mStationList.clear();
+        //mStationList.addAll(new Dummy(this).getCollection());
+        //mStationAdapter.notifyDataSetChanged();
     }
 
     private void setupListener() {
@@ -191,8 +223,6 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.makeText(MainActivity.this, "Data could not be saved. " + firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
                                 } else {
                                     Toast.makeText(MainActivity.this, "Radio Station successfully saved!", Toast.LENGTH_SHORT).show();
-                                    mStationList.add(radioStation);
-                                    mStationAdapter.notifyDataSetChanged();
                                     dialog.dismiss();
                                 }
                             }
