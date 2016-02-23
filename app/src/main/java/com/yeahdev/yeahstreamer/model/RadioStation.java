@@ -2,15 +2,21 @@ package com.yeahdev.yeahstreamer.model;
 
 
 public class RadioStation {
-    private byte[] mIcon;
+    private String mIcon;
     private String mName;
     private String mUrl;
 
+    public RadioStation() {}
+    public RadioStation(String icon, String name, String url) {
+        this.mIcon = icon;
+        this.mName = name;
+        this.mUrl = url;
+    }
 
-    public byte[] getIcon() {
+    public String getIcon() {
         return mIcon;
     }
-    public void setIcon(byte[] icon) {
+    public void setIcon(String icon) {
         this.mIcon = icon;
     }
 

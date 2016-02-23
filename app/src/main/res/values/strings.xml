@@ -11,4 +11,9 @@
     <string name="register">Go To Register</string>
 
     <string name="signinToMain">SignInToMainActivity</string>
+
+    <string name="addname">Add Radio Station name</string>
+    <string name="addstadion">Add Radio Station URL</string>
+    <string name="ok">OK</string>
+    <string name="cancel">CANCEL</string>
 </resources>

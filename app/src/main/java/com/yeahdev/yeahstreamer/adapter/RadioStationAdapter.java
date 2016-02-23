@@ -3,6 +3,7 @@ package com.yeahdev.yeahstreamer.adapter;
 
 import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.model.RadioStation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class RadioStationAdapter extends BaseAdapter {
 
@@ -55,7 +57,8 @@ public class RadioStationAdapter extends BaseAdapter {
             radioStationViewHolder = (RadioStationViewHolder) convertView.getTag();
         }
 
-        radioStationViewHolder.rsImageView.setImageBitmap(BitmapFactory.decodeByteArray(radioStation.getIcon(), 0, radioStation.getIcon().length));
+        byte[] imageData = Base64.decode(radioStation.getIcon(), Base64.DEFAULT);
+        radioStationViewHolder.rsImageView.setImageBitmap(BitmapFactory.decodeByteArray(imageData , 0, imageData.length));
         radioStationViewHolder.rsTextView.setText(radioStation.getName());
 
         return convertView;

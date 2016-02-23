@@ -1,6 +1,5 @@
 package com.yeahdev.yeahstreamer.activities;
 
-import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Build;
@@ -16,10 +15,10 @@ import android.widget.Toast;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.yeahdev.yeahstreamer.BuildConfig;
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.model.User;
 import com.yeahdev.yeahstreamer.util.Constants;
+import com.yeahdev.yeahstreamer.util.Util;
 
 
 public class SignInActivity extends AppCompatActivity {
@@ -41,7 +40,9 @@ public class SignInActivity extends AppCompatActivity {
         AuthData mAuth = new Firebase(Constants.FIREBASE_REF).getAuth();
 
         if (mAuth != null) {
-            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+            intent.putExtra(Constants.FIREBASE_UID, mAuth.getUid());
+            startActivity(intent);
             SignInActivity.this.finish();
         } else {
             initComponents();
@@ -103,12 +104,15 @@ public class SignInActivity extends AppCompatActivity {
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                            intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
                             View view = btnSignIn;
                             String transitionName = getResources().getString(R.string.signinToMain);
                             ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(SignInActivity.this, view, transitionName);
                             startActivity(intent, activityOptions.toBundle());
                         } else {
-                            startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                            intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
+                            startActivity(intent);
                         }
 
                         SignInActivity.this.finish();
@@ -158,10 +162,10 @@ public class SignInActivity extends AppCompatActivity {
 
                         mRef.authWithPassword(emailAddress, password, new Firebase.AuthResultHandler() {
                             @Override
-                            public void onAuthenticated(AuthData authData) {
+                            public void onAuthenticated(final AuthData authData) {
 
                                 User user = new User();
-                                user.setUsername(getUsername(authData.getProviderData().get("email")));
+                                user.setUsername(Util.getUsername(authData.getProviderData().get("email")));
                                 user.setEmailAddress(authData.getProviderData().get("email").toString());
                                 user.setProfileImage(authData.getProviderData().get("profileImageURL").toString());
                                 user.setProvider(authData.getProvider());
@@ -179,12 +183,15 @@ public class SignInActivity extends AppCompatActivity {
 
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                                 Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                                                intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
                                                 View view = btnSignIn;
                                                 String transitionName = getResources().getString(R.string.signinToMain);
                                                 ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation(SignInActivity.this, view, transitionName);
                                                 startActivity(intent, activityOptions.toBundle());
                                             } else {
-                                                startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                                                Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                                                intent.putExtra(Constants.FIREBASE_UID, authData.getUid());
+                                                startActivity(intent);
                                             }
 
                                             SignInActivity.this.finish();
@@ -207,10 +214,5 @@ public class SignInActivity extends AppCompatActivity {
                 });
             }
         });
-    }
-
-    private String getUsername(Object email) {
-        String mail = (String) email;
-        return mail.split("@")[0];
     }
 }

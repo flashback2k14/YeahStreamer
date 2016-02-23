@@ -1,5 +1,6 @@
 package com.yeahdev.yeahstreamer.activities;
 
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -23,12 +24,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.adapter.RadioStationAdapter;
 import com.yeahdev.yeahstreamer.model.Dummy;
@@ -36,10 +40,13 @@ import com.yeahdev.yeahstreamer.model.RadioStation;
 import com.yeahdev.yeahstreamer.services.StreamService;
 import com.yeahdev.yeahstreamer.util.Constants;
 import com.yeahdev.yeahstreamer.util.UrlLoader;
+import com.yeahdev.yeahstreamer.util.Util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mPlayerSelectedName;
     private ImageView mPlayerControl;
 
+    private String mUserId;
     private RadioStation mCurrentRadioStation;
     private boolean mIsPlaying;
 
@@ -66,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         initControls();
         initAdapter();
 
+        getUserId();
         loadRadioStations();
 
         setupListener();
@@ -92,6 +101,15 @@ public class MainActivity extends AppCompatActivity {
         mStationList = new ArrayList<>();
         mStationAdapter = new RadioStationAdapter(this, mStationList);
         mStationListview.setAdapter(mStationAdapter);
+    }
+
+    private void getUserId() {
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            mUserId = bundle.getString(Constants.FIREBASE_UID);
+        } else {
+            mUserId = "";
+        }
     }
 
     private void loadRadioStations() {
@@ -148,7 +166,48 @@ public class MainActivity extends AppCompatActivity {
         mFabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "ToDo", Toast.LENGTH_SHORT).show();
+                final Dialog dialog = new Dialog(MainActivity.this);
+                dialog.setCancelable(false);
+                dialog.setContentView(R.layout.add_dialog);
+
+                final EditText etName = (EditText) dialog.findViewById(R.id.etRadioStationName);
+                final EditText etUrl = (EditText) dialog.findViewById(R.id.etRadioStationUrl);
+                Button btnOk = (Button) dialog.findViewById(R.id.btnOk);
+                Button btnCancel = (Button) dialog.findViewById(R.id.btnCancel);
+
+                btnOk.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String name = etName.getText().toString();
+                        String url = etUrl.getText().toString();
+
+                        final RadioStation radioStation = Util.getRadioStation(MainActivity.this, name, url);
+
+                        Firebase mRsRef = new Firebase(Constants.FIREBASE_REF).child("radiostations").child(mUserId).push();
+                        mRsRef.setValue(radioStation, new Firebase.CompletionListener() {
+                            @Override
+                            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                if (firebaseError != null) {
+                                    Toast.makeText(MainActivity.this, "Data could not be saved. " + firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(MainActivity.this, "Radio Station successfully saved!", Toast.LENGTH_SHORT).show();
+                                    mStationList.add(radioStation);
+                                    mStationAdapter.notifyDataSetChanged();
+                                    dialog.dismiss();
+                                }
+                            }
+                        });
+                    }
+                });
+
+                btnCancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+
+                dialog.show();
             }
         });
     }
@@ -158,7 +217,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
                 mIsPlaying = true;
-                mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(mCurrentRadioStation.getIcon(), 0, mCurrentRadioStation.getIcon().length));
+                byte[] imageData = Base64.decode(mCurrentRadioStation.getIcon(), Base64.DEFAULT);
+                mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(imageData, 0, imageData.length));
                 mPlayerSelectedName.setText(mCurrentRadioStation.getName());
                 mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
                 mTbPlayer.setVisibility(View.VISIBLE);
@@ -202,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
         if (preferences.contains(Constants.CURRENT_RADIO_STATION_ICON)) {
             RadioStation tmp = new RadioStation();
 
-            tmp.setIcon(Base64.decode(preferences.getString(Constants.CURRENT_RADIO_STATION_ICON, ""), Base64.DEFAULT));
+            tmp.setIcon(preferences.getString(Constants.CURRENT_RADIO_STATION_ICON, ""));
             tmp.setName(preferences.getString(Constants.CURRENT_RADIO_STATION_NAME, ""));
             tmp.setUrl(preferences.getString(Constants.CURRENT_RADIO_STATION_URL, ""));
 
@@ -210,7 +270,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (mIsPlaying) {
-            mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(mCurrentRadioStation.getIcon(), 0, mCurrentRadioStation.getIcon().length));
+            byte[] imageData = Base64.decode(mCurrentRadioStation.getIcon(), Base64.DEFAULT);
+            mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(imageData, 0, imageData.length));
             mPlayerSelectedName.setText(mCurrentRadioStation.getName());
             mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
             mTbPlayer.setVisibility(View.VISIBLE);
@@ -224,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putBoolean(Constants.CURRENT_PLAYING_STATE, mIsPlaying);
         if (mCurrentRadioStation != null) {
-            editor.putString(Constants.CURRENT_RADIO_STATION_ICON, Base64.encodeToString(mCurrentRadioStation.getIcon(), Base64.DEFAULT));
+            editor.putString(Constants.CURRENT_RADIO_STATION_ICON, mCurrentRadioStation.getIcon());
             editor.putString(Constants.CURRENT_RADIO_STATION_NAME, mCurrentRadioStation.getName());
             editor.putString(Constants.CURRENT_RADIO_STATION_URL, mCurrentRadioStation.getUrl());
         }
