@@ -39,6 +39,7 @@ import com.yeahdev.yeahstreamer.adapter.RadioStationAdapter;
 import com.yeahdev.yeahstreamer.model.RadioStation;
 import com.yeahdev.yeahstreamer.services.StreamService;
 import com.yeahdev.yeahstreamer.util.Constants;
+import com.yeahdev.yeahstreamer.util.FirebaseWrapper;
 import com.yeahdev.yeahstreamer.util.Util;
 
 import java.util.ArrayList;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mPlayerSelectedName;
     private ImageView mPlayerControl;
 
+    private FirebaseWrapper mFbWrapper;
     private RadioStation mCurrentRadioStation;
     private boolean mIsPlaying;
 
@@ -68,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mFbWrapper = new FirebaseWrapper(this, Constants.FIREBASE_REF);
 
         initControls();
         initAdapter();
@@ -102,37 +106,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadRadioStations() {
-        AuthData authData = new Firebase(Constants.FIREBASE_REF).getAuth();
-        if (authData != null) {
-            Firebase mRef = new Firebase(Constants.FIREBASE_REF).child("radiostations").child(authData.getUid());
-            mRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    // clear radio station list before add collection
-                    mStationList.clear();
-                    // add radio station to list
-                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        RadioStation radioStation = snapshot.getValue(RadioStation.class);
-                        mStationList.add(radioStation);
-                        mStationAdapter.notifyDataSetChanged();
-                    }
-                    // dismiss progress dialog
-                    mProgressDialog.dismiss();
-                }
+        mFbWrapper.loadData(Constants.FIREBASE_RADIOSTATION, new FirebaseWrapper.OnLoadListener() {
+            @Override
+            public void onLoaded(ArrayList<RadioStation> radioStations) {
+                mStationList.clear();
+                mStationList.addAll(radioStations);
+                mStationAdapter.notifyDataSetChanged();
+                mProgressDialog.dismiss();
+            }
 
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    mProgressDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "The read failed: " + firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+            @Override
+            public void onCanceled(FirebaseError error) {
+                mProgressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "The read failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
 
-        } else {
-            mProgressDialog.dismiss();
-            Toast.makeText(MainActivity.this, "User login expired!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(MainActivity.this, SignInActivity.class));
-            MainActivity.this.finish();
-        }
+            @Override
+            public void onExpired(String msg) {
+                mProgressDialog.dismiss();
+                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                MainActivity.this.finish();
+            }
+        });
     }
 
     private void setupListener() {
@@ -165,25 +161,29 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                        AuthData authData = new Firebase(Constants.FIREBASE_REF).getAuth();
-                        if (authData != null) {
-                            RadioStation radioStation = mStationList.get(position);
-                            Firebase mRef = new Firebase(Constants.FIREBASE_REF).child("radiostations").child(authData.getUid()).child(radioStation.getKey());
-                            mRef.removeValue(new Firebase.CompletionListener() {
-                                @Override
-                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                    if (firebaseError != null) {
-                                        Toast.makeText(MainActivity.this, "Data could not be removed. " + firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        Toast.makeText(MainActivity.this, "Radio Station successfully removed!", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
-                        } else {
-                            Toast.makeText(MainActivity.this, "User login expired!", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                            MainActivity.this.finish();
-                        }
+                        RadioStation radioStation = mStationList.get(position);
+
+                        mFbWrapper.removeItemByKey(Constants.FIREBASE_RADIOSTATION,
+                                radioStation.getKey(),
+                                new FirebaseWrapper.OnChangedListener() {
+
+                            @Override
+                            public void onSuccess(String msg) {
+                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailed(FirebaseError error) {
+                                Toast.makeText(MainActivity.this, "Data could not be removed. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onExpired(String msg) {
+                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                MainActivity.this.finish();
+                            }
+                        });
                     }
                 });
                 builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -212,34 +212,32 @@ public class MainActivity extends AppCompatActivity {
                         btnOk.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                HashMap<String, Object> updateMap = new HashMap<>(2);
+                                updateMap.put("name", etName.getText().toString());
+                                updateMap.put("url", etUrl.getText().toString());
 
-                                AuthData authData = new Firebase(Constants.FIREBASE_REF).getAuth();
-                                if (authData != null) {
-                                    Firebase mRsRef = new Firebase(Constants.FIREBASE_REF).child("radiostations").child(authData.getUid()).child(radioStation.getKey());
+                                mFbWrapper.updateItemByKey(Constants.FIREBASE_RADIOSTATION,
+                                        radioStation.getKey(), updateMap,
+                                        new FirebaseWrapper.OnChangedListener() {
 
-                                    String name = etName.getText().toString();
-                                    String url = etUrl.getText().toString();
+                                    @Override
+                                    public void onSuccess(String msg) {
+                                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                        dialog.dismiss();
+                                    }
 
-                                    HashMap<String, Object> map = new HashMap<>(2);
-                                    map.put("name", name);
-                                    map.put("url", url);
+                                    @Override
+                                    public void onFailed(FirebaseError error) {
+                                        Toast.makeText(MainActivity.this, "Data could not be updated. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
 
-                                    mRsRef.updateChildren(map, new Firebase.CompletionListener() {
-                                        @Override
-                                        public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                            if (firebaseError != null) {
-                                                Toast.makeText(MainActivity.this, "Data could not be updated. " + firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                            } else {
-                                                Toast.makeText(MainActivity.this, "Radio Station successfully updated!", Toast.LENGTH_SHORT).show();
-                                                dialog.dismiss();
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    Toast.makeText(MainActivity.this, "User login expired!", Toast.LENGTH_SHORT).show();
-                                    startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                    MainActivity.this.finish();
-                                }
+                                    @Override
+                                    public void onExpired(String msg) {
+                                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                        MainActivity.this.finish();
+                                    }
+                                });
                             }
                         });
 
@@ -304,31 +302,31 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
 
-                        AuthData authData = new Firebase(Constants.FIREBASE_REF).getAuth();
-                        if (authData != null) {
-                            Firebase mRsRef = new Firebase(Constants.FIREBASE_REF).child("radiostations").child(authData.getUid()).push();
-                            String name = etName.getText().toString();
-                            String url = etUrl.getText().toString();
-                            String key = mRsRef.getKey();
+                        String name = etName.getText().toString();
+                        String url = etUrl.getText().toString();
+                        RadioStation radioStation = Util.getRadioStation(MainActivity.this, name, url);
 
-                            final RadioStation radioStation = Util.getRadioStation(MainActivity.this, name, url, key);
+                        mFbWrapper.addItem(Constants.FIREBASE_RADIOSTATION,
+                                radioStation, new FirebaseWrapper.OnChangedListener() {
 
-                            mRsRef.setValue(radioStation, new Firebase.CompletionListener() {
-                                @Override
-                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                    if (firebaseError != null) {
-                                        Toast.makeText(MainActivity.this, "Data could not be saved. " + firebaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        Toast.makeText(MainActivity.this, "Radio Station successfully saved!", Toast.LENGTH_SHORT).show();
-                                        dialog.dismiss();
-                                    }
-                                }
-                            });
-                        } else {
-                            Toast.makeText(MainActivity.this, "User login expired!", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                            MainActivity.this.finish();
-                        }
+                            @Override
+                            public void onSuccess(String msg) {
+                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+                            }
+
+                            @Override
+                            public void onFailed(FirebaseError error) {
+                                Toast.makeText(MainActivity.this, "Data could not be saved. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onExpired(String msg) {
+                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                MainActivity.this.finish();
+                            }
+                        });
                     }
                 });
 
@@ -378,10 +376,26 @@ public class MainActivity extends AppCompatActivity {
                 mPlayerSelectedName.setText("");
                 mPlayerControl.setImageResource(R.drawable.ic_stop_24dp);
                 mTbPlayer.setVisibility(View.GONE);
+
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
+                editor.clear();
+                editor.apply();
             }
         };
         IntentFilter playbackStoppedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_STOPPED);
         LocalBroadcastManager.getInstance(this).registerReceiver(playbackStoppedReceiver, playbackStoppedFilter);
+
+        BroadcastReceiver progressReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.hasExtra(Constants.EXTRA_BUFFER_PROGRESS)) {
+                    int progress = intent.getIntExtra(Constants.EXTRA_BUFFER_PROGRESS, -1);
+                    Toast.makeText(MainActivity.this, "Load Progress: " + progress, Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+        IntentFilter progressFilter = new IntentFilter(Constants.ACTION_PLAYBACK_PROGRESS);
+        LocalBroadcastManager.getInstance(this).registerReceiver(progressReceiver, progressFilter);
     }
 
     @Override
