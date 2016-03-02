@@ -28,7 +28,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
 import com.yeahdev.yeahstreamer.R;
@@ -454,9 +453,10 @@ public class MainActivity extends AppCompatActivity {
                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        new Firebase(Constants.FIREBASE_REF).unauth();
-                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                        MainActivity.this.finish();
+                        if (mFbWrapper.logout()) {
+                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                            MainActivity.this.finish();
+                        }
                     }
                 });
                 builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
