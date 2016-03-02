@@ -28,7 +28,7 @@
         </activity>
 
         <service
-            android:name=".services.StreamService"
+            android:name=".service.StreamService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.yeahdev.yeahstreamer.action.PLAY" />

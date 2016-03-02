@@ -1,4 +1,4 @@
-package com.yeahdev.yeahstreamer.util;
+package com.yeahdev.yeahstreamer.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory;
 import android.util.Base64;
 
 import com.yeahdev.yeahstreamer.R;
-import com.yeahdev.yeahstreamer.model.RadioStation;
+import com.yeahdev.yeahstreamer.models.RadioStation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

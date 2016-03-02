@@ -1,10 +1,10 @@
-package com.yeahdev.yeahstreamer.model;
+package com.yeahdev.yeahstreamer.models;
 
 import android.content.Context;
 import android.util.Base64;
 
-import com.yeahdev.yeahstreamer.util.UrlLoader;
-import com.yeahdev.yeahstreamer.util.Util;
+import com.yeahdev.yeahstreamer.utils.UrlLoader;
+import com.yeahdev.yeahstreamer.utils.Util;
 
 import java.io.File;
 import java.util.ArrayList;

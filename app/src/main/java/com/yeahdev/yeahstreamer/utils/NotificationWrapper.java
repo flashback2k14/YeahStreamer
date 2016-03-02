@@ -1,4 +1,4 @@
-package com.yeahdev.yeahstreamer.util;
+package com.yeahdev.yeahstreamer.utils;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -8,7 +8,7 @@ import android.support.v7.app.NotificationCompat;
 
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.activities.MainActivity;
-import com.yeahdev.yeahstreamer.services.StreamService;
+import com.yeahdev.yeahstreamer.service.StreamService;
 
 
 public class NotificationWrapper {

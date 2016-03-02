@@ -16,9 +16,9 @@ import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.yeahdev.yeahstreamer.R;
-import com.yeahdev.yeahstreamer.model.User;
-import com.yeahdev.yeahstreamer.util.Constants;
-import com.yeahdev.yeahstreamer.util.Util;
+import com.yeahdev.yeahstreamer.models.User;
+import com.yeahdev.yeahstreamer.utils.Constants;
+import com.yeahdev.yeahstreamer.utils.Util;
 
 
 public class SignInActivity extends AppCompatActivity {

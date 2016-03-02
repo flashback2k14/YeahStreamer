@@ -12,10 +12,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.yeahdev.yeahstreamer.R;
-import com.yeahdev.yeahstreamer.model.RadioStation;
+import com.yeahdev.yeahstreamer.models.RadioStation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class RadioStationAdapter extends BaseAdapter {
 

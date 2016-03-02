@@ -1,8 +1,5 @@
-package com.yeahdev.yeahstreamer.services;
+package com.yeahdev.yeahstreamer.service;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -17,9 +14,8 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.yeahdev.yeahstreamer.R;
-import com.yeahdev.yeahstreamer.activities.MainActivity;
-import com.yeahdev.yeahstreamer.util.Constants;
-import com.yeahdev.yeahstreamer.util.NotificationWrapper;
+import com.yeahdev.yeahstreamer.utils.Constants;
+import com.yeahdev.yeahstreamer.utils.NotificationWrapper;
 
 import java.io.IOException;
 

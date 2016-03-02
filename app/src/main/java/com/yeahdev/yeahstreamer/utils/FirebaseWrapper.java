@@ -1,4 +1,4 @@
-package com.yeahdev.yeahstreamer.util;
+package com.yeahdev.yeahstreamer.utils;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
@@ -8,11 +8,10 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.yeahdev.yeahstreamer.model.RadioStation;
+import com.yeahdev.yeahstreamer.models.RadioStation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 
 public class FirebaseWrapper {
@@ -39,6 +38,10 @@ public class FirebaseWrapper {
         this.mBaseRef = new Firebase(this.mBaseUrl);
     }
 
+    /**
+     * Check if User is logged in and Return the specific User Id
+     * @return UserId
+     */
     @Nullable
     private String getUserId() {
         AuthData authData = this.mBaseRef.getAuth();
@@ -49,6 +52,46 @@ public class FirebaseWrapper {
         }
     }
 
+    /**
+     * BEGIN CRUD
+     */
+    /**
+     * Add new Item to specific Route on Firebase DB
+     * @param route
+     * @param item
+     * @param listener
+     */
+    public void addItem(String route, RadioStation item, final OnChangedListener listener) {
+        String userId = getUserId();
+        if (userId != null) {
+            Firebase radioStationRef = this.mBaseRef.child(route).child(userId).push();
+            item.setKey(radioStationRef.getKey());
+            radioStationRef.setValue(item, new Firebase.CompletionListener() {
+                @Override
+                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                    if (firebaseError != null) {
+                        if (listener != null) {
+                            listener.onFailed(firebaseError);
+                        }
+                    } else {
+                        if (listener != null) {
+                            listener.onSuccess("Radio Station successfully saved!");
+                        }
+                    }
+                }
+            });
+        } else {
+            if (listener != null) {
+                listener.onExpired("User login expired!");
+            }
+        }
+    }
+
+    /**
+     * Load all data from specific Route on Firebase DB
+     * @param route
+     * @param listener
+     */
     public void loadData(String route, final OnLoadListener listener) {
         String userId = getUserId();
         if (userId != null) {
@@ -79,32 +122,13 @@ public class FirebaseWrapper {
         }
     }
 
-    public void addItem(String route, RadioStation item, final OnChangedListener listener) {
-        String userId = getUserId();
-        if (userId != null) {
-            Firebase radioStationRef = this.mBaseRef.child(route).child(userId).push();
-            item.setKey(radioStationRef.getKey());
-            radioStationRef.setValue(item, new Firebase.CompletionListener() {
-                @Override
-                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                    if (firebaseError != null) {
-                        if (listener != null) {
-                            listener.onFailed(firebaseError);
-                        }
-                    } else {
-                        if (listener != null) {
-                            listener.onSuccess("Radio Station successfully saved!");
-                        }
-                    }
-                }
-            });
-        } else {
-            if (listener != null) {
-                listener.onExpired("User login expired!");
-            }
-        }
-    }
-
+    /**
+     * Update specific Firebase Item on specific Firebase DB Route by KEY
+     * @param route
+     * @param itemKey
+     * @param updateData
+     * @param listener
+     */
     public void updateItemByKey(String route, String itemKey, HashMap<String, Object> updateData, final OnChangedListener listener) {
         String userId = getUserId();
         if (userId != null) {
@@ -130,6 +154,12 @@ public class FirebaseWrapper {
         }
     }
 
+    /**
+     * Remove specific Firebase Item on specific Firebase DB Route by KEY
+     * @param route
+     * @param itemKey
+     * @param listener
+     */
     public void removeItemByKey(String route, String itemKey, final OnChangedListener listener) {
         String userId = getUserId();
         if (userId != null) {
@@ -154,4 +184,7 @@ public class FirebaseWrapper {
             }
         }
     }
+    /**
+     * END CRUD
+     */
 }

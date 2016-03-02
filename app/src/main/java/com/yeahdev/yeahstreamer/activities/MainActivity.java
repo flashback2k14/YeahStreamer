@@ -25,26 +25,22 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.client.AuthData;
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
+
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.adapter.RadioStationAdapter;
-import com.yeahdev.yeahstreamer.model.RadioStation;
-import com.yeahdev.yeahstreamer.services.StreamService;
-import com.yeahdev.yeahstreamer.util.Constants;
-import com.yeahdev.yeahstreamer.util.FirebaseWrapper;
-import com.yeahdev.yeahstreamer.util.Util;
+import com.yeahdev.yeahstreamer.models.RadioStation;
+import com.yeahdev.yeahstreamer.service.StreamService;
+import com.yeahdev.yeahstreamer.utils.Constants;
+import com.yeahdev.yeahstreamer.utils.FirebaseWrapper;
+import com.yeahdev.yeahstreamer.utils.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity {
