@@ -122,7 +122,7 @@ public class FirebaseWrapper {
                             user.setProfileImage(authData.getProviderData().get("profileImageURL").toString());
                             user.setProvider(authData.getProvider());
 
-                            addItem(Constants.FIREBASE_USER, user, new OnChangedListener() {
+                            addItem(Constants.FIREBASE_ROUTE_USER, user, new OnChangedListener() {
                                 @Override
                                 public void onSuccess(String msg) {
                                     listener.onSuccess(msg);

@@ -1,5 +1,6 @@
 package com.yeahdev.yeahstreamer.utils;
 
+
 public class Constants {
 
     private Constants() {}
@@ -27,8 +28,11 @@ public class Constants {
     public static final String CURRENT_RADIO_STATION_KEY = "CURRENT_RADIO_STATION_KEY";
 
     public static final String FIREBASE_REF = "https://yeah-streamer.firebaseio.com/";
-    public static final String FIREBASE_USER = "users";
-    public static final String FIREBASE_RADIOSTATION = "radiostations";
+    public static final String FIREBASE_ROUTE_USER = "users";
+    public static final String FIREBASE_ROUTE_RADIOSTATION = "radiostations";
+
+    public static final String FIREBASE_UPDATE_NAME = "name";
+    public static final String FIREBASE_UPDATE_URL = "url";
 
     public static final String M3U_FILE = "m3u";
     public static final String PLS_FILE = "pls";

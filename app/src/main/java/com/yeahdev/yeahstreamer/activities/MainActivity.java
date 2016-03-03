@@ -1,10 +1,8 @@
 package com.yeahdev.yeahstreamer.activities;
 
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -13,7 +11,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
@@ -21,22 +18,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.FirebaseError;
-
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.adapter.RadioStationAdapter;
 import com.yeahdev.yeahstreamer.models.RadioStation;
 import com.yeahdev.yeahstreamer.service.StreamService;
 import com.yeahdev.yeahstreamer.utils.Constants;
+import com.yeahdev.yeahstreamer.utils.DialogWrapper;
 import com.yeahdev.yeahstreamer.utils.FirebaseWrapper;
-import com.yeahdev.yeahstreamer.utils.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView mPlayerControl;
 
     private FirebaseWrapper mFbWrapper;
+    private DialogWrapper mDialogWrapper;
+
     private RadioStation mCurrentRadioStation;
     private boolean mIsPlaying;
 
@@ -66,8 +62,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
-
+        initWrapper();
         initControls();
         initAdapter();
 
@@ -75,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
 
         setupListener();
         setupBroadcastReceiver();
+    }
+
+    private void initWrapper() {
+        mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
+        mDialogWrapper = new DialogWrapper(this);
     }
 
     private void initControls() {
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadRadioStations() {
-        mFbWrapper.loadData(Constants.FIREBASE_RADIOSTATION, new FirebaseWrapper.OnLoadListener() {
+        mFbWrapper.loadData(Constants.FIREBASE_ROUTE_RADIOSTATION, new FirebaseWrapper.OnLoadListener() {
             @Override
             public void onLoaded(ArrayList<RadioStation> radioStations) {
                 mStationList.clear();
@@ -147,109 +147,63 @@ public class MainActivity extends AppCompatActivity {
         mStationListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("DELETE");
-                builder.setMessage("Are you sure to remove the Radio Station?");
-                builder.setCancelable(false);
-                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                mDialogWrapper.buildDeleteDialog(new DialogWrapper.OnDeleteListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
+                    public void onConfirmed() {
                         RadioStation radioStation = mStationList.get(position);
+                        mFbWrapper.removeItemByKey(Constants.FIREBASE_ROUTE_RADIOSTATION,
+                            radioStation.getKey(),
+                            new FirebaseWrapper.OnChangedListener() {
+                                @Override
+                                public void onSuccess(String msg) {
+                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                }
 
-                        mFbWrapper.removeItemByKey(Constants.FIREBASE_RADIOSTATION,
-                                radioStation.getKey(),
-                                new FirebaseWrapper.OnChangedListener() {
+                                @Override
+                                public void onFailed(FirebaseError error) {
+                                    Toast.makeText(MainActivity.this, "Data could not be removed. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
 
-                            @Override
-                            public void onSuccess(String msg) {
-                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onFailed(FirebaseError error) {
-                                Toast.makeText(MainActivity.this, "Data could not be removed. " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onExpired(String msg) {
-                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                MainActivity.this.finish();
-                            }
-                        });
+                                @Override
+                                public void onExpired(String msg) {
+                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                    MainActivity.this.finish();
+                                }
+                            });
                     }
-                });
-                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                builder.setNeutralButton("Edit", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface di, int which) {
-
-                        final Dialog dialog = new Dialog(MainActivity.this);
-                        dialog.setCancelable(false);
-                        dialog.setContentView(R.layout.add_dialog);
-
-                        final EditText etName = (EditText) dialog.findViewById(R.id.etRadioStationName);
-                        final EditText etUrl = (EditText) dialog.findViewById(R.id.etRadioStationUrl);
-                        Button btnOk = (Button) dialog.findViewById(R.id.btnOk);
-                        Button btnCancel = (Button) dialog.findViewById(R.id.btnCancel);
-
+                    public void onEdited() {
                         final RadioStation radioStation = mStationList.get(position);
-                        etName.setText(radioStation.getName());
-                        etUrl.setText(radioStation.getUrl());
-
-                        btnOk.setOnClickListener(new View.OnClickListener() {
+                        mDialogWrapper.buildEditDialog(radioStation.getName(), radioStation.getUrl(), new DialogWrapper.OnEditListener() {
                             @Override
-                            public void onClick(View v) {
-                                HashMap<String, Object> updateMap = new HashMap<>(2);
-                                updateMap.put("name", etName.getText().toString());
-                                updateMap.put("url", etUrl.getText().toString());
+                            public void onConfirmed(HashMap<String, Object> updateData) {
+                                mFbWrapper.updateItemByKey(Constants.FIREBASE_ROUTE_RADIOSTATION,
+                                    radioStation.getKey(), updateData,
+                                    new FirebaseWrapper.OnChangedListener() {
+                                        @Override
+                                        public void onSuccess(String msg) {
+                                            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                            mDialogWrapper.getDialog().dismiss();
+                                        }
 
-                                mFbWrapper.updateItemByKey(Constants.FIREBASE_RADIOSTATION,
-                                        radioStation.getKey(), updateMap,
-                                        new FirebaseWrapper.OnChangedListener() {
+                                        @Override
+                                        public void onFailed(FirebaseError error) {
+                                            Toast.makeText(MainActivity.this, "Data could not be updated. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
 
-                                    @Override
-                                    public void onSuccess(String msg) {
-                                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-                                        dialog.dismiss();
-                                    }
-
-                                    @Override
-                                    public void onFailed(FirebaseError error) {
-                                        Toast.makeText(MainActivity.this, "Data could not be updated. " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-
-                                    @Override
-                                    public void onExpired(String msg) {
-                                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-                                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                        MainActivity.this.finish();
-                                    }
-                                });
+                                        @Override
+                                        public void onExpired(String msg) {
+                                            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                            MainActivity.this.finish();
+                                        }
+                                    });
                             }
                         });
-
-                        btnCancel.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                dialog.dismiss();
-                            }
-                        });
-
-                        dialog.show();
                     }
                 });
-
-                AlertDialog alertDialog = builder.create();
-                alertDialog.show();
-
                 return true;
             }
         });
@@ -284,55 +238,31 @@ public class MainActivity extends AppCompatActivity {
         mFabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Dialog dialog = new Dialog(MainActivity.this);
-                dialog.setCancelable(false);
-                dialog.setContentView(R.layout.add_dialog);
-
-                final EditText etName = (EditText) dialog.findViewById(R.id.etRadioStationName);
-                final EditText etUrl = (EditText) dialog.findViewById(R.id.etRadioStationUrl);
-                Button btnOk = (Button) dialog.findViewById(R.id.btnOk);
-                Button btnCancel = (Button) dialog.findViewById(R.id.btnCancel);
-
-                btnOk.setOnClickListener(new View.OnClickListener() {
+                mDialogWrapper.buildAddDialog(new DialogWrapper.OnAddListener() {
                     @Override
-                    public void onClick(View v) {
+                    public void onConfirmed(RadioStation radioStation) {
+                        mFbWrapper.addItem(Constants.FIREBASE_ROUTE_RADIOSTATION,
+                            radioStation, new FirebaseWrapper.OnChangedListener() {
+                                @Override
+                                public void onSuccess(String msg) {
+                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    mDialogWrapper.getDialog().dismiss();
+                                }
 
-                        String name = etName.getText().toString();
-                        String url = etUrl.getText().toString();
-                        RadioStation radioStation = Util.getRadioStation(MainActivity.this, name, url);
+                                @Override
+                                public void onFailed(FirebaseError error) {
+                                    Toast.makeText(MainActivity.this, "Data could not be saved. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
 
-                        mFbWrapper.addItem(Constants.FIREBASE_RADIOSTATION,
-                                radioStation, new FirebaseWrapper.OnChangedListener() {
-
-                            @Override
-                            public void onSuccess(String msg) {
-                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-                                dialog.dismiss();
-                            }
-
-                            @Override
-                            public void onFailed(FirebaseError error) {
-                                Toast.makeText(MainActivity.this, "Data could not be saved. " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onExpired(String msg) {
-                                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                MainActivity.this.finish();
-                            }
-                        });
+                                @Override
+                                public void onExpired(String msg) {
+                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                    MainActivity.this.finish();
+                                }
+                            });
                     }
                 });
-
-                btnCancel.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.dismiss();
-                    }
-                });
-
-                dialog.show();
             }
         });
     }
@@ -446,28 +376,15 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_logout:
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("LOGOUT");
-                builder.setMessage("Are you sure to logout?");
-                builder.setCancelable(false);
-                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                mDialogWrapper.buildLogoutDialog(new DialogWrapper.OnLogoutListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                    public void onConfirmed() {
                         if (mFbWrapper.logout()) {
                             startActivity(new Intent(MainActivity.this, SignInActivity.class));
                             MainActivity.this.finish();
                         }
                     }
                 });
-                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                AlertDialog alertDialog = builder.create();
-                alertDialog.show();
-
                 return true;
         }
         return super.onOptionsItemSelected(item);
