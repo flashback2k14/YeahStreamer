@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mFbWrapper = new FirebaseWrapper(this, Constants.FIREBASE_REF);
+        mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
 
         initControls();
         initAdapter();
@@ -400,18 +400,18 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         mIsPlaying = preferences.getBoolean(Constants.CURRENT_PLAYING_STATE, false);
 
-        if (preferences.contains(Constants.CURRENT_RADIO_STATION_ICON)) {
-            RadioStation tmp = new RadioStation();
-
-            tmp.setIcon(preferences.getString(Constants.CURRENT_RADIO_STATION_ICON, ""));
-            tmp.setName(preferences.getString(Constants.CURRENT_RADIO_STATION_NAME, ""));
-            tmp.setUrl(preferences.getString(Constants.CURRENT_RADIO_STATION_URL, ""));
-            tmp.setKey(preferences.getString(Constants.CURRENT_RADIO_STATION_KEY, ""));
-
-            mCurrentRadioStation = tmp;
-        }
-
         if (mIsPlaying) {
+            if (preferences.contains(Constants.CURRENT_RADIO_STATION_ICON)) {
+                RadioStation tmp = new RadioStation();
+
+                tmp.setIcon(preferences.getString(Constants.CURRENT_RADIO_STATION_ICON, ""));
+                tmp.setName(preferences.getString(Constants.CURRENT_RADIO_STATION_NAME, ""));
+                tmp.setUrl(preferences.getString(Constants.CURRENT_RADIO_STATION_URL, ""));
+                tmp.setKey(preferences.getString(Constants.CURRENT_RADIO_STATION_KEY, ""));
+
+                mCurrentRadioStation = tmp;
+            }
+
             byte[] imageData = Base64.decode(mCurrentRadioStation.getIcon(), Base64.DEFAULT);
             mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(imageData, 0, imageData.length));
             mPlayerSelectedName.setText(mCurrentRadioStation.getName());

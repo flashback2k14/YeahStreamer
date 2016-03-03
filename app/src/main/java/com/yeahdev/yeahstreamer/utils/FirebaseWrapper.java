@@ -1,6 +1,5 @@
 package com.yeahdev.yeahstreamer.utils;
 
-import android.content.Context;
 import android.support.annotation.Nullable;
 
 import com.firebase.client.AuthData;
@@ -17,7 +16,7 @@ import java.util.HashMap;
 
 public class FirebaseWrapper {
     /**
-     * Interfaces
+     * Public Interfaces
      */
     public interface OnCreatedListener {
         void onSuccess(String msg);
@@ -40,21 +39,16 @@ public class FirebaseWrapper {
     }
 
     /**
-     * Members
+     * Private Members
      */
-    private Context mContext;
-    private String mBaseUrl;
     private Firebase mBaseRef;
 
     /**
      * Constructor
-     * @param context
-     * @param baseUrl
+     * @param baseUrl - Firebase DB URL
      */
-    public FirebaseWrapper(Context context, String baseUrl) {
-        this.mContext = context;
-        this.mBaseUrl = baseUrl;
-        this.mBaseRef = new Firebase(this.mBaseUrl);
+    public FirebaseWrapper(String baseUrl) {
+        this.mBaseRef = new Firebase(baseUrl);
     }
 
     /**
@@ -84,10 +78,10 @@ public class FirebaseWrapper {
      * BEGIN AUTH
      */
     /**
-     * Authentificate the User with Email and Password
-     * @param email
-     * @param password
-     * @param listener
+     * Authenticate the User with Email and Password
+     * @param email - User Email Address
+     * @param password - User Password
+     * @param listener - Callback Listener
      */
     public void authWithPassword(String email, String password, final OnAuthListener listener) {
         this.mBaseRef.authWithPassword(email, password, new Firebase.AuthResultHandler() {
@@ -109,9 +103,9 @@ public class FirebaseWrapper {
 
     /**
      * Create a new User, Save User Data on Firebase DB and login the User
-     * @param email
-     * @param password
-     * @param listener
+     * @param email - User Email Address
+     * @param password - User Password
+     * @param listener - Callback Listener
      */
     public void createAndLoginUser(final String email, final String password, final OnCreatedListener listener) {
         this.mBaseRef.createUser(email, password, new Firebase.ResultHandler() {
@@ -173,9 +167,9 @@ public class FirebaseWrapper {
      */
     /**
      * Add new Item to specific Route on Firebase DB
-     * @param route
-     * @param item Radio Station
-     * @param listener
+     * @param route - Firebase Route to Radio Stations
+     * @param item - Radio Station
+     * @param listener - Callback Listener
      */
     public void addItem(String route, RadioStation item, final OnChangedListener listener) {
         String userId = getUserId();
@@ -205,9 +199,9 @@ public class FirebaseWrapper {
 
     /**
      * Add new Item to specific Route on Firebase DB
-     * @param route
-     * @param user
-     * @param listener
+     * @param route - Firebase Route to Radio Stations
+     * @param user - User
+     * @param listener - Callback Listener
      */
     public void addItem(String route, User user, final OnChangedListener listener) {
         String userId = getUserId();
@@ -236,8 +230,8 @@ public class FirebaseWrapper {
 
     /**
      * Load all data from specific Route on Firebase DB
-     * @param route
-     * @param listener
+     * @param route - Firebase Route to Radio Stations
+     * @param listener - Callback Listener
      */
     public void loadData(String route, final OnLoadListener listener) {
         String userId = getUserId();
@@ -271,10 +265,10 @@ public class FirebaseWrapper {
 
     /**
      * Update specific Firebase Item on specific Firebase DB Route by KEY
-     * @param route
-     * @param itemKey
-     * @param updateData
-     * @param listener
+     * @param route - Firebase Route to Radio Stations
+     * @param itemKey - Specific Radio Station Key
+     * @param updateData - Data to Update Radio Station
+     * @param listener - Callback Listener
      */
     public void updateItemByKey(String route, String itemKey, HashMap<String, Object> updateData, final OnChangedListener listener) {
         String userId = getUserId();
@@ -303,9 +297,9 @@ public class FirebaseWrapper {
 
     /**
      * Remove specific Firebase Item on specific Firebase DB Route by KEY
-     * @param route
-     * @param itemKey
-     * @param listener
+     * @param route - Firebase Route to Radio Stations
+     * @param itemKey - Specific Radio Station Key
+     * @param listener - Callback Listener
      */
     public void removeItemByKey(String route, String itemKey, final OnChangedListener listener) {
         String userId = getUserId();
@@ -325,6 +319,54 @@ public class FirebaseWrapper {
                     }
                 }
             });
+        } else {
+            if (listener != null) {
+                listener.onExpired("User login expired!");
+            }
+        }
+    }
+
+    /**
+     * Remove specific Firebase Item on specific Firebase DB Route by Radio Station
+     * @param route - Firebase Route to Radio Stations
+     * @param radioStation - Radio Station to delete
+     * @param listener - Callback Listener
+     */
+    public void removeItem(String route, RadioStation radioStation, final OnChangedListener listener) {
+        String userId = getUserId();
+        if (userId != null) {
+            this.mBaseRef.child(route).child(userId)
+                .orderByChild("key")
+                .equalTo(radioStation.getKey())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.hasChildren()) {
+                            final DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
+                            firstChild.getRef().removeValue(new Firebase.CompletionListener() {
+                                @Override
+                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                    if (firebaseError != null) {
+                                        if (listener != null) {
+                                            listener.onFailed(firebaseError);
+                                        }
+                                    } else {
+                                        if (listener != null) {
+                                            listener.onSuccess("Radio Station successfully removed!");
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        if (listener != null) {
+                            listener.onFailed(firebaseError);
+                        }
+                    }
+                });
         } else {
             if (listener != null) {
                 listener.onExpired("User login expired!");

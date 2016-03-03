@@ -36,7 +36,7 @@ public class SignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        mFbWrapper = new FirebaseWrapper(this, Constants.FIREBASE_REF);
+        mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
 
         String userId = mFbWrapper.getUserId();
         if (userId != null) {
