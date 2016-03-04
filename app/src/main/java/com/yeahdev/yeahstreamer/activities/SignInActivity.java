@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.FirebaseError;
@@ -44,7 +43,7 @@ public class SignInActivity extends AppCompatActivity {
         String userId = mFbWrapper.getUserId();
         if (userId != null) {
             startActivity(new Intent(SignInActivity.this, MainActivity.class));
-            //SignInActivity.this.finish();
+            SignInActivity.this.finish();
         } else {
             initComponents();
             setupListener();
@@ -114,7 +113,7 @@ public class SignInActivity extends AppCompatActivity {
                         }
 
                         mToastWrapper.showLong("User " + authData.getProviderData().get("email") + " is logged in!");
-                        //SignInActivity.this.finish();
+                        SignInActivity.this.finish();
                     }
 
                     @Override
@@ -172,7 +171,7 @@ public class SignInActivity extends AppCompatActivity {
                             startActivity(intent);
                         }
 
-                        //SignInActivity.this.finish();
+                        SignInActivity.this.finish();
                     }
 
                     @Override
