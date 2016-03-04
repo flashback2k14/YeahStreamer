@@ -31,6 +31,7 @@ import com.yeahdev.yeahstreamer.service.StreamService;
 import com.yeahdev.yeahstreamer.utils.Constants;
 import com.yeahdev.yeahstreamer.utils.DialogWrapper;
 import com.yeahdev.yeahstreamer.utils.FirebaseWrapper;
+import com.yeahdev.yeahstreamer.utils.ToastWrapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseWrapper mFbWrapper;
     private DialogWrapper mDialogWrapper;
+    private ToastWrapper mToastWrapper;
 
     private RadioStation mCurrentRadioStation;
     private boolean mIsPlaying;
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private void initWrapper() {
         mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
         mDialogWrapper = new DialogWrapper(this);
+        mToastWrapper = new ToastWrapper(this);
     }
 
     private void initControls() {
@@ -113,15 +116,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCanceled(FirebaseError error) {
                 mProgressDialog.dismiss();
-                Toast.makeText(MainActivity.this, "The read failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                mToastWrapper.showLong("The read failed: " + error.getMessage());
             }
 
             @Override
             public void onExpired(String msg) {
                 mProgressDialog.dismiss();
-                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                mToastWrapper.showShort(msg);
                 startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                MainActivity.this.finish();
+                //MainActivity.this.finish();
             }
         });
     }
@@ -130,14 +133,12 @@ public class MainActivity extends AppCompatActivity {
         mStationListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                RadioStation radioStation = mStationList.get(position);
-
-                mCurrentRadioStation = radioStation;
+                mCurrentRadioStation = mStationList.get(position);
                 mIsPlaying = true;
 
                 Intent intent = new Intent(MainActivity.this, StreamService.class);
-                intent.putExtra(Constants.EXTRA_STATION_NAME, radioStation.getName());
-                intent.putExtra(Constants.EXTRA_STATION_URI, radioStation.getUrl());
+                intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
+                intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
                 intent.setAction(Constants.ACTION_PLAY);
 
                 startService(intent);
@@ -156,19 +157,19 @@ public class MainActivity extends AppCompatActivity {
                             new FirebaseWrapper.OnChangedListener() {
                                 @Override
                                 public void onSuccess(String msg) {
-                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    mToastWrapper.showShort(msg);
                                 }
 
                                 @Override
                                 public void onFailed(FirebaseError error) {
-                                    Toast.makeText(MainActivity.this, "Data could not be removed. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                    mToastWrapper.showLong("Data could not be removed. " + error.getMessage());
                                 }
 
                                 @Override
                                 public void onExpired(String msg) {
-                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    mToastWrapper.showShort(msg);
                                     startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                    MainActivity.this.finish();
+                                    //MainActivity.this.finish();
                                 }
                             });
                     }
@@ -184,20 +185,20 @@ public class MainActivity extends AppCompatActivity {
                                     new FirebaseWrapper.OnChangedListener() {
                                         @Override
                                         public void onSuccess(String msg) {
-                                            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                            mToastWrapper.showShort(msg);
                                             mDialogWrapper.getDialog().dismiss();
                                         }
 
                                         @Override
                                         public void onFailed(FirebaseError error) {
-                                            Toast.makeText(MainActivity.this, "Data could not be updated. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                            mToastWrapper.showLong("Data could not be updated. " + error.getMessage());
                                         }
 
                                         @Override
                                         public void onExpired(String msg) {
-                                            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                            mToastWrapper.showShort(msg);
                                             startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                            MainActivity.this.finish();
+                                            //MainActivity.this.finish();
                                         }
                                     });
                             }
@@ -216,11 +217,15 @@ public class MainActivity extends AppCompatActivity {
                     intent.setAction(Constants.ACTION_PAUSE);
                     startService(intent);
                 } else {
-                    Intent intent = new Intent(MainActivity.this, StreamService.class);
-                    intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
-                    intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
-                    intent.setAction(Constants.ACTION_PLAY);
-                    startService(intent);
+                    if (mCurrentRadioStation != null) {
+                        Intent intent = new Intent(MainActivity.this, StreamService.class);
+                        intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
+                        intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
+                        intent.setAction(Constants.ACTION_PLAY);
+                        startService(intent);
+                    } else {
+                        mToastWrapper.showLong("Something went wrong to play the Stream - mPlayerControl.");
+                    }
                 }
             }
         });
@@ -245,20 +250,20 @@ public class MainActivity extends AppCompatActivity {
                             radioStation, new FirebaseWrapper.OnChangedListener() {
                                 @Override
                                 public void onSuccess(String msg) {
-                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    mToastWrapper.showShort(msg);
                                     mDialogWrapper.getDialog().dismiss();
                                 }
 
                                 @Override
                                 public void onFailed(FirebaseError error) {
-                                    Toast.makeText(MainActivity.this, "Data could not be saved. " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                    mToastWrapper.showLong("Data could not be saved. " + error.getMessage());
                                 }
 
                                 @Override
                                 public void onExpired(String msg) {
-                                    Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    mToastWrapper.showShort(msg);
                                     startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                    MainActivity.this.finish();
+                                    //MainActivity.this.finish();
                                 }
                             });
                     }
@@ -271,12 +276,14 @@ public class MainActivity extends AppCompatActivity {
         BroadcastReceiver playbackStartedReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mIsPlaying = true;
-                byte[] imageData = Base64.decode(mCurrentRadioStation.getIcon(), Base64.DEFAULT);
-                mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(imageData, 0, imageData.length));
-                mPlayerSelectedName.setText(mCurrentRadioStation.getName());
-                mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
-                mTbPlayer.setVisibility(View.VISIBLE);
+                if (mCurrentRadioStation != null) {
+                    mIsPlaying = true;
+                    byte[] imageData = Base64.decode(mCurrentRadioStation.getIcon(), Base64.DEFAULT);
+                    mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(imageData, 0, imageData.length));
+                    mPlayerSelectedName.setText(mCurrentRadioStation.getName());
+                    mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
+                    mTbPlayer.setVisibility(View.VISIBLE);
+                }
             }
         };
         IntentFilter playbackStartedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_STARTED);
@@ -285,8 +292,10 @@ public class MainActivity extends AppCompatActivity {
         BroadcastReceiver playbackPausedReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mIsPlaying = false;
-                mPlayerControl.setImageResource(R.drawable.ic_play_arrow_24dp);
+                if (mIsPlaying) {
+                    mIsPlaying = false;
+                    mPlayerControl.setImageResource(R.drawable.ic_play_arrow_24dp);
+                }
             }
         };
         IntentFilter playbackPausedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_PAUSED);
@@ -299,12 +308,7 @@ public class MainActivity extends AppCompatActivity {
                 mCurrentRadioStation = null;
                 mPlayerSelectedIcon.setImageBitmap(null);
                 mPlayerSelectedName.setText("");
-                mPlayerControl.setImageResource(R.drawable.ic_stop_24dp);
                 mTbPlayer.setVisibility(View.GONE);
-
-                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
-                editor.clear();
-                editor.apply();
             }
         };
         IntentFilter playbackStoppedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_STOPPED);
@@ -315,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 if (intent.hasExtra(Constants.EXTRA_BUFFER_PROGRESS)) {
                     int progress = intent.getIntExtra(Constants.EXTRA_BUFFER_PROGRESS, -1);
-                    Toast.makeText(MainActivity.this, "Load Progress: " + progress, Toast.LENGTH_SHORT).show();
+                    mToastWrapper.showShort("Load Progress: " + progress);
                 }
             }
         };
@@ -340,13 +344,13 @@ public class MainActivity extends AppCompatActivity {
                 tmp.setKey(preferences.getString(Constants.CURRENT_RADIO_STATION_KEY, ""));
 
                 mCurrentRadioStation = tmp;
-            }
 
-            byte[] imageData = Base64.decode(mCurrentRadioStation.getIcon(), Base64.DEFAULT);
-            mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(imageData, 0, imageData.length));
-            mPlayerSelectedName.setText(mCurrentRadioStation.getName());
-            mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
-            mTbPlayer.setVisibility(View.VISIBLE);
+                byte[] imageData = Base64.decode(mCurrentRadioStation.getIcon(), Base64.DEFAULT);
+                mPlayerSelectedIcon.setImageBitmap(BitmapFactory.decodeByteArray(imageData, 0, imageData.length));
+                mPlayerSelectedName.setText(mCurrentRadioStation.getName());
+                mPlayerControl.setImageResource(R.drawable.ic_pause_24dp);
+                mTbPlayer.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -379,9 +383,10 @@ public class MainActivity extends AppCompatActivity {
                 mDialogWrapper.buildLogoutDialog(new DialogWrapper.OnLogoutListener() {
                     @Override
                     public void onConfirmed() {
+                        mToastWrapper.showShort("logging out...");
                         if (mFbWrapper.logout()) {
                             startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                            MainActivity.this.finish();
+                            //MainActivity.this.finish();
                         }
                     }
                 });

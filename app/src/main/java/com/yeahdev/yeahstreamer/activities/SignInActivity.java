@@ -17,6 +17,7 @@ import com.firebase.client.FirebaseError;
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.utils.Constants;
 import com.yeahdev.yeahstreamer.utils.FirebaseWrapper;
+import com.yeahdev.yeahstreamer.utils.ToastWrapper;
 
 
 public class SignInActivity extends AppCompatActivity {
@@ -29,6 +30,7 @@ public class SignInActivity extends AppCompatActivity {
     private TextView tvRegister;
 
     private FirebaseWrapper mFbWrapper;
+    private ToastWrapper mToastWrapper;
     private boolean isLogin = true;
 
     @Override
@@ -37,11 +39,12 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_in);
 
         mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
+        mToastWrapper = new ToastWrapper(this);
 
         String userId = mFbWrapper.getUserId();
         if (userId != null) {
             startActivity(new Intent(SignInActivity.this, MainActivity.class));
-            SignInActivity.this.finish();
+            //SignInActivity.this.finish();
         } else {
             initComponents();
             setupListener();
@@ -83,13 +86,13 @@ public class SignInActivity extends AppCompatActivity {
 
                 String emailAddress = etEmailAddress.getText().toString();
                 if (TextUtils.isEmpty(emailAddress)) {
-                    Toast.makeText(SignInActivity.this, "Email Address is empty!", Toast.LENGTH_SHORT).show();
+                    mToastWrapper.showShort("Email Address is empty!");
                     return;
                 }
 
                 String password = etPassword.getText().toString();
                 if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(SignInActivity.this, "Password is empty!", Toast.LENGTH_SHORT).show();
+                    mToastWrapper.showShort("Password is empty!");
                     return;
                 }
 
@@ -110,13 +113,13 @@ public class SignInActivity extends AppCompatActivity {
                             startActivity(intent);
                         }
 
-                        Toast.makeText(SignInActivity.this, "User " + authData.getUid() + " is logged in!", Toast.LENGTH_SHORT).show();
-                        SignInActivity.this.finish();
+                        mToastWrapper.showLong("User " + authData.getProviderData().get("email") + " is logged in!");
+                        //SignInActivity.this.finish();
                     }
 
                     @Override
                     public void onFailed(FirebaseError error) {
-                        Toast.makeText(SignInActivity.this, "Error Code:" + error.getCode() + ", Msg: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        mToastWrapper.showLong("Error Code:" + error.getCode() + ", Msg: " + error.getMessage());
                     }
                 });
             }
@@ -128,24 +131,24 @@ public class SignInActivity extends AppCompatActivity {
 
                 final String emailAddress = etEmailAddress.getText().toString();
                 if (TextUtils.isEmpty(emailAddress)) {
-                    Toast.makeText(SignInActivity.this, "Email Address is empty!", Toast.LENGTH_SHORT).show();
+                    mToastWrapper.showShort("Email Address is empty!");
                     return;
                 }
 
                 final String password = etPassword.getText().toString();
                 if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(SignInActivity.this, "Password is empty!", Toast.LENGTH_SHORT).show();
+                    mToastWrapper.showShort("Password is empty!");
                     return;
                 }
 
                 String passwordAgain = etPasswordAgain.getText().toString();
                 if (TextUtils.isEmpty(passwordAgain)) {
-                    Toast.makeText(SignInActivity.this, "Password again is empty!", Toast.LENGTH_SHORT).show();
+                    mToastWrapper.showShort("Password again is empty!");
                     return;
                 }
 
                 if (!password.matches(passwordAgain)) {
-                    Toast.makeText(SignInActivity.this, "Passwords not matching!", Toast.LENGTH_SHORT).show();
+                    mToastWrapper.showShort("Passwords not matching!");
                     etPassword.setText("");
                     etPasswordAgain.setText("");
                     return;
@@ -169,17 +172,17 @@ public class SignInActivity extends AppCompatActivity {
                             startActivity(intent);
                         }
 
-                        SignInActivity.this.finish();
+                        //SignInActivity.this.finish();
                     }
 
                     @Override
                     public void onFailed(FirebaseError error) {
-                        Toast.makeText(SignInActivity.this, "Error Code:" + error.getCode() + ", Msg: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        mToastWrapper.showLong("Error Code:" + error.getCode() + ", Msg: " + error.getMessage());
                     }
 
                     @Override
                     public void onExpired(String msg) {
-                        Toast.makeText(SignInActivity.this, msg, Toast.LENGTH_SHORT).show();
+                        mToastWrapper.showShort(msg);
                     }
                 });
             }

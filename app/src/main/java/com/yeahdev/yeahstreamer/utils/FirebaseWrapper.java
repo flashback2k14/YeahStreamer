@@ -42,6 +42,7 @@ public class FirebaseWrapper {
      * Private Members
      */
     private Firebase mBaseRef;
+    private ValueEventListener mLoadListener;
 
     /**
      * Constructor
@@ -49,6 +50,7 @@ public class FirebaseWrapper {
      */
     public FirebaseWrapper(String baseUrl) {
         this.mBaseRef = new Firebase(baseUrl);
+        this.mLoadListener = null;
     }
 
     /**
@@ -70,6 +72,7 @@ public class FirebaseWrapper {
      * @return User is logged out
      */
     public boolean logout() {
+        this.mBaseRef.removeEventListener(this.mLoadListener);
         this.mBaseRef.unauth();
         return true;
     }
@@ -237,7 +240,7 @@ public class FirebaseWrapper {
         String userId = getUserId();
         if (userId != null) {
             Firebase userStationRef = this.mBaseRef.child(route).child(userId);
-            userStationRef.addValueEventListener(new ValueEventListener() {
+            this.mLoadListener = userStationRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (listener != null) {
