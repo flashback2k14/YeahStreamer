@@ -4,62 +4,66 @@
     android:orientation="vertical"
     android:layout_width="300dp"
     android:layout_height="220dp"
-    android:padding="10dp"
-    android:background="@color/windowBackground">
+    android:background="@color/windowBackgroundLight"
+    android:paddingLeft="20dp"
+    android:paddingTop="20dp"
+    android:paddingRight="20dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/addname"
         android:textSize="20sp"
-        android:textColor="@color/textColor"
+        android:textColor="@color/textColorDark"
         android:textStyle="bold"/>
 
     <EditText
         android:id="@+id/etRadioStationName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/textColor"/>
+        android:textColor="@color/textColorDark"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/addstadion"
         android:textSize="20sp"
-        android:textColor="@color/textColor"
-        android:textStyle="bold"/>
+        android:textColor="@color/textColorDark"
+        android:textStyle="bold"
+        android:layout_marginTop="10dp" />
 
     <EditText
         android:id="@+id/etRadioStationUrl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/textColor"
+        android:textColor="@color/textColorDark"
         android:inputType="textUri"/>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="right"
+        android:layout_gravity="right|bottom"
         android:orientation="horizontal"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="5dp">
 
         <Button
             android:id="@+id/btnCancel"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:text="@string/cancel"
-            android:textColor="@color/textColor"
-            android:background="@color/colorAccent"/>
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textColor="@color/colorAccent"
+            style="?buttonBarNegativeButtonStyle"/>
 
         <Button
             android:id="@+id/btnOk"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
-            android:layout_marginRight="5dp"
             android:text="@string/ok"
-            android:textColor="@color/textColor"
-            android:background="@color/colorPrimary"/>
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textColor="@color/colorPrimary"
+            style="?buttonBarPositiveButtonStyle"/>
 
     </LinearLayout>
 

@@ -56,28 +56,30 @@
         android:id="@+id/btnSignIn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:text="@string/login"
-        android:background="@color/colorAccent"
+        android:textAppearance="@style/TextAppearance.AppCompat.Button"
         android:textColor="@color/textColor"
-        android:transitionName="@string/signinToMain"/>
+        android:transitionName="@string/signinToMain"
+        style="@style/Widget.AppCompat.Button.Colored"/>
 
     <Button
         android:id="@+id/btnRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:text="@string/signin"
-        android:background="@color/colorAccent"
+        android:textAppearance="@style/TextAppearance.AppCompat.Button"
         android:textColor="@color/textColor"
+        android:transitionName="@string/signinToMain"
         android:visibility="gone"
-        android:transitionName="@string/signinToMain"/>
+        style="@style/Widget.AppCompat.Button.Colored"/>
 
     <TextView
         android:id="@+id/tvRegister"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="20dp"
         android:layout_gravity="center_horizontal|center_vertical"
         android:text="@string/register"
         android:textSize="20sp"
