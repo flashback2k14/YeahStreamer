@@ -381,6 +381,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mFbWrapper.removeListener();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
@@ -395,6 +401,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onConfirmed() {
                         mToastWrapper.showShort("logging out...");
                         if (mFbWrapper.logout()) {
+                            mFbWrapper.removeListener();
                             startActivity(new Intent(MainActivity.this, SignInActivity.class));
                             MainActivity.this.finish();
                         }

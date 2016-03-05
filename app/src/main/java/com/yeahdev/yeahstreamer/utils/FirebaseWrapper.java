@@ -12,6 +12,7 @@ import com.yeahdev.yeahstreamer.models.User;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class FirebaseWrapper {
@@ -42,6 +43,7 @@ public class FirebaseWrapper {
      * Private Members
      */
     private Firebase mBaseRef;
+    private HashMap<Firebase, ValueEventListener> mListenerMap;
     private ValueEventListener mLoadListener;
 
     /**
@@ -50,9 +52,14 @@ public class FirebaseWrapper {
      */
     public FirebaseWrapper(String baseUrl) {
         this.mBaseRef = new Firebase(baseUrl);
+        this.mListenerMap = new HashMap<>();
         this.mLoadListener = null;
     }
 
+
+    /**
+     * BEGIN UTIL
+     */
     /**
      * Check if User is logged in and Return the specific User Id
      * @return UserId
@@ -72,10 +79,26 @@ public class FirebaseWrapper {
      * @return User is logged out
      */
     public boolean logout() {
-        this.mBaseRef.removeEventListener(this.mLoadListener);
         this.mBaseRef.unauth();
         return true;
     }
+
+    /**
+     * Remove Listener after Destroy Activity
+     */
+    public void removeListener() {
+        if (this.mLoadListener != null) {
+            for (Map.Entry<Firebase, ValueEventListener> entry : mListenerMap.entrySet()) {
+                Firebase ref = entry.getKey();
+                ValueEventListener listener = entry.getValue();
+                ref.removeEventListener(listener);
+            }
+            this.mLoadListener = null;
+        }
+    }
+    /**
+     * END UTIL
+     */
 
     /**
      * BEGIN AUTH
@@ -240,7 +263,7 @@ public class FirebaseWrapper {
         String userId = getUserId();
         if (userId != null) {
             Firebase userStationRef = this.mBaseRef.child(route).child(userId);
-            this.mLoadListener = userStationRef.addValueEventListener(new ValueEventListener() {
+            this.mLoadListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     if (listener != null) {
@@ -258,7 +281,9 @@ public class FirebaseWrapper {
                         listener.onCanceled(firebaseError);
                     }
                 }
-            });
+            };
+            this.mListenerMap.put(userStationRef, this.mLoadListener);
+            userStationRef.addValueEventListener(this.mLoadListener);
         } else {
             if (listener != null) {
                 listener.onExpired("User login expired!");
