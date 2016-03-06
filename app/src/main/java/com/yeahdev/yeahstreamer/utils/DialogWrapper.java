@@ -18,18 +18,17 @@ public class DialogWrapper {
     /**
      * Public Interfaces
      */
-    public interface OnLogoutListener {
-        void onConfirmed();
-    }
-    public interface OnDeleteListener {
-        void onConfirmed();
-        void onEdited();
+    public interface OnAddListener {
+        void onConfirmed(RadioStation radioStation);
     }
     public interface OnEditListener {
         void onConfirmed(HashMap<String, Object> updateData);
     }
-    public interface OnAddListener {
-        void onConfirmed(RadioStation radioStation);
+    public interface OnDeleteListener {
+        void onConfirmed();
+    }
+    public interface OnLogoutListener {
+        void onConfirmed();
     }
 
     /**
@@ -154,14 +153,6 @@ public class DialogWrapper {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
-            }
-        });
-        builder.setNeutralButton("Edit", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (listener != null) {
-                    listener.onEdited();
-                }
             }
         });
         AlertDialog alertDialog = builder.create();

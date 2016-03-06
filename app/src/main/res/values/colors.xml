@@ -7,4 +7,6 @@
     <color name="windowBackgroundLight">#EEEEEE</color>
     <color name="textColorDark">#333333</color>
     <color name="textColor">#EEEEEE</color>
+    <color name="itemBackground">#FFFFFF</color>
+    <color name="rvBackground">#ECEFF1</color>
 </resources>

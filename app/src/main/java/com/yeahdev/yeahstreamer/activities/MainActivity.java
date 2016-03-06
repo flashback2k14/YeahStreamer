@@ -11,19 +11,21 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.firebase.client.FirebaseError;
 import com.yeahdev.yeahstreamer.R;
-import com.yeahdev.yeahstreamer.adapter.RadioStationAdapter;
+import com.yeahdev.yeahstreamer.adapter.RadioStationRvAdapter;
+import com.yeahdev.yeahstreamer.interfaces.IItemButtonClicked;
 import com.yeahdev.yeahstreamer.models.RadioStation;
 import com.yeahdev.yeahstreamer.service.StreamService;
 import com.yeahdev.yeahstreamer.utils.Constants;
@@ -36,19 +38,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements IItemButtonClicked {
 
     private ArrayList<RadioStation> mStationList;
-    private RadioStationAdapter mStationAdapter;
+    private RadioStationRvAdapter mStationRvAdapter;
     private FloatingActionButton mFabAdd;
 
     private ProgressDialog mProgressDialog;
-    private ListView mStationListView;
+    private RecyclerView mStationRecyclerView;
 
     private Toolbar mTbPlayer;
     private ImageView mPlayerSelectedIcon;
     private TextView mPlayerSelectedName;
     private ImageView mPlayerControl;
+    private ImageView mPlayerControlStop;
 
     private FirebaseWrapper mFbWrapper;
     private DialogWrapper mDialogWrapper;
@@ -85,22 +88,26 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         mFabAdd = (FloatingActionButton) findViewById(R.id.fab);
-
         mProgressDialog = ProgressDialog.show(this, "Loading", "Get Radio Stations from Firebase...", false, true);
-        mStationListView = (ListView) findViewById(R.id.lvRadioStations);
+
+        mStationRecyclerView = (RecyclerView) findViewById(R.id.rvRadioStations);
+        mStationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mStationRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mStationRecyclerView.setHasFixedSize(true);
 
         mTbPlayer = (Toolbar) findViewById(R.id.tbPlayer);
-        mPlayerSelectedIcon = (ImageView) findViewById(R.id.selected_track_image);
-        mPlayerSelectedName = (TextView) findViewById(R.id.selected_track_title);
-        mPlayerControl = (ImageView) findViewById(R.id.player_control);
-
         mTbPlayer.setVisibility(View.GONE);
+
+        mPlayerSelectedIcon = (ImageView) findViewById(R.id.current_radio_station_logo);
+        mPlayerSelectedName = (TextView) findViewById(R.id.current_radio_station_name);
+        mPlayerControl = (ImageView) findViewById(R.id.player_control);
+        mPlayerControlStop = (ImageView) findViewById(R.id.player_control_stop);
     }
 
     private void initAdapter() {
         mStationList = new ArrayList<>();
-        mStationAdapter = new RadioStationAdapter(this, mStationList);
-        mStationListView.setAdapter(mStationAdapter);
+        mStationRvAdapter = new RadioStationRvAdapter(this.mStationList, this);
+        mStationRecyclerView.setAdapter(mStationRvAdapter);
     }
 
     private void loadRadioStations() {
@@ -109,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
             public void onLoaded(ArrayList<RadioStation> radioStations) {
                 mStationList.clear();
                 mStationList.addAll(radioStations);
-                mStationAdapter.notifyDataSetChanged();
+                mStationRvAdapter.notifyDataSetChanged();
                 mProgressDialog.dismiss();
             }
 
@@ -130,82 +137,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupListener() {
-        mStationListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mFabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // set data
-                mCurrentRadioStation = mStationList.get(position);
-                mIsPlaying = true;
-                // start service to play stream
-                Intent intent = new Intent(MainActivity.this, StreamService.class);
-                intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
-                intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
-                intent.setAction(Constants.ACTION_PLAY);
-                startService(intent);
-            }
-        });
-
-        mStationListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-                mDialogWrapper.buildDeleteDialog(new DialogWrapper.OnDeleteListener() {
+            public void onClick(View v) {
+                mDialogWrapper.buildAddDialog(new DialogWrapper.OnAddListener() {
                     @Override
-                    public void onConfirmed() {
-                        RadioStation radioStation = mStationList.get(position);
-                        mFbWrapper.removeItemByKey(Constants.FIREBASE_ROUTE_RADIOSTATION,
-                            radioStation.getKey(),
-                            new FirebaseWrapper.OnChangedListener() {
-                                @Override
-                                public void onSuccess(String msg) {
-                                    mToastWrapper.showShort(msg);
-                                }
+                    public void onConfirmed(RadioStation radioStation) {
+                        mFbWrapper.addItem(Constants.FIREBASE_ROUTE_RADIOSTATION,
+                                radioStation, new FirebaseWrapper.OnChangedListener() {
+                                    @Override
+                                    public void onSuccess(String msg) {
+                                        mToastWrapper.showShort(msg);
+                                        mDialogWrapper.getDialog().dismiss();
+                                    }
 
-                                @Override
-                                public void onFailed(FirebaseError error) {
-                                    mToastWrapper.showLong("Data could not be removed. " + error.getMessage());
-                                }
+                                    @Override
+                                    public void onFailed(FirebaseError error) {
+                                        mToastWrapper.showLong("Data could not be saved. " + error.getMessage());
+                                    }
 
-                                @Override
-                                public void onExpired(String msg) {
-                                    mToastWrapper.showShort(msg);
-                                    startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                    MainActivity.this.finish();
-                                }
-                            });
-                    }
-
-                    @Override
-                    public void onEdited() {
-                        final RadioStation radioStation = mStationList.get(position);
-                        mDialogWrapper.buildEditDialog(radioStation.getName(), radioStation.getUrl(), new DialogWrapper.OnEditListener() {
-                            @Override
-                            public void onConfirmed(HashMap<String, Object> updateData) {
-                                mFbWrapper.updateItemByKey(Constants.FIREBASE_ROUTE_RADIOSTATION,
-                                    radioStation.getKey(), updateData,
-                                    new FirebaseWrapper.OnChangedListener() {
-                                        @Override
-                                        public void onSuccess(String msg) {
-                                            mToastWrapper.showShort(msg);
-                                            mDialogWrapper.getDialog().dismiss();
-                                        }
-
-                                        @Override
-                                        public void onFailed(FirebaseError error) {
-                                            mToastWrapper.showLong("Data could not be updated. " + error.getMessage());
-                                        }
-
-                                        @Override
-                                        public void onExpired(String msg) {
-                                            mToastWrapper.showShort(msg);
-                                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                            MainActivity.this.finish();
-                                        }
-                                    });
-                            }
-                        });
+                                    @Override
+                                    public void onExpired(String msg) {
+                                        mToastWrapper.showShort(msg);
+                                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                        MainActivity.this.finish();
+                                    }
+                                });
                     }
                 });
-                return true;
             }
         });
 
@@ -232,45 +191,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mPlayerSelectedIcon.setOnLongClickListener(new View.OnLongClickListener() {
+        mPlayerControlStop.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLongClick(View v) {
+            public void onClick(View v) {
                 // start service to stop stream
                 Intent intent = new Intent(MainActivity.this, StreamService.class);
                 intent.setAction(Constants.ACTION_STOP);
                 startService(intent);
-                return true;
-            }
-        });
-
-        mFabAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mDialogWrapper.buildAddDialog(new DialogWrapper.OnAddListener() {
-                    @Override
-                    public void onConfirmed(RadioStation radioStation) {
-                        mFbWrapper.addItem(Constants.FIREBASE_ROUTE_RADIOSTATION,
-                            radioStation, new FirebaseWrapper.OnChangedListener() {
-                                @Override
-                                public void onSuccess(String msg) {
-                                    mToastWrapper.showShort(msg);
-                                    mDialogWrapper.getDialog().dismiss();
-                                }
-
-                                @Override
-                                public void onFailed(FirebaseError error) {
-                                    mToastWrapper.showLong("Data could not be saved. " + error.getMessage());
-                                }
-
-                                @Override
-                                public void onExpired(String msg) {
-                                    mToastWrapper.showShort(msg);
-                                    startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                                    MainActivity.this.finish();
-                                }
-                            });
-                    }
-                });
             }
         });
     }
@@ -411,5 +338,77 @@ public class MainActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void playRadioStation(RadioStation radioStation) {
+        //set data
+        mCurrentRadioStation = radioStation;
+        mIsPlaying = true;
+        // start service to play stream
+        Intent intent = new Intent(MainActivity.this, StreamService.class);
+        intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
+        intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
+        intent.setAction(Constants.ACTION_PLAY);
+        startService(intent);
+    }
+
+    @Override
+    public void editRadioStation(final RadioStation radioStation) {
+        mDialogWrapper.buildEditDialog(radioStation.getName(), radioStation.getUrl(), new DialogWrapper.OnEditListener() {
+            @Override
+            public void onConfirmed(HashMap<String, Object> updateData) {
+                mFbWrapper.updateItemByKey(Constants.FIREBASE_ROUTE_RADIOSTATION,
+                    radioStation.getKey(), updateData,
+                    new FirebaseWrapper.OnChangedListener() {
+                        @Override
+                        public void onSuccess(String msg) {
+                            mToastWrapper.showShort(msg);
+                            mDialogWrapper.getDialog().dismiss();
+                        }
+
+                        @Override
+                        public void onFailed(FirebaseError error) {
+                            mToastWrapper.showLong("Data could not be updated. " + error.getMessage());
+                        }
+
+                        @Override
+                        public void onExpired(String msg) {
+                            mToastWrapper.showShort(msg);
+                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                            MainActivity.this.finish();
+                        }
+                    });
+            }
+        });
+    }
+
+    @Override
+    public void deleteRadioStation(final RadioStation radioStation) {
+        mDialogWrapper.buildDeleteDialog(new DialogWrapper.OnDeleteListener() {
+            @Override
+            public void onConfirmed() {
+                mFbWrapper.removeItemByKey(Constants.FIREBASE_ROUTE_RADIOSTATION,
+                    radioStation.getKey(),
+                    new FirebaseWrapper.OnChangedListener() {
+                        @Override
+                        public void onSuccess(String msg) {
+                            mToastWrapper.showShort(msg);
+                        }
+
+                        @Override
+                        public void onFailed(FirebaseError error) {
+                            mToastWrapper.showLong("Data could not be removed. " + error.getMessage());
+                        }
+
+                        @Override
+                        public void onExpired(String msg) {
+                            mToastWrapper.showShort(msg);
+                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                            MainActivity.this.finish();
+                        }
+                    });
+            }
+        });
     }
 }
