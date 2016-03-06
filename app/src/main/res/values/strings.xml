@@ -2,9 +2,9 @@
     <string name="app_name">Yeah! Streamer</string>
     <string name="action_logout">Logout</string>
 
-    <string name="email">Email-Address&#8230;</string>
-    <string name="pw">Password&#8230;</string>
-    <string name="pwa">Password again&#8230;</string>
+    <string name="email">Email Address</string>
+    <string name="pw">Password</string>
+    <string name="pwa">Password again</string>
     <string name="login">Log In</string>
     <string name="signin">Sign In</string>
     <string name="gtLogin">Go To Login</string>
@@ -12,8 +12,8 @@
 
     <string name="signinToMain">SignInToMainActivity</string>
 
-    <string name="addname">Add Radio Station name</string>
+    <string name="addname">Add Radio Station Name</string>
     <string name="addstadion">Add Radio Station URL</string>
-    <string name="ok">OK</string>
-    <string name="cancel">CANCEL</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
 </resources>

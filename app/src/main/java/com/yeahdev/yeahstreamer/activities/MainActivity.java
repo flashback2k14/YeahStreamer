@@ -276,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupBroadcastReceiver() {
+        // BroadcastReceiver for played state from StreamService
         BroadcastReceiver playbackStartedReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -296,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
         };
         IntentFilter playbackStartedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_STARTED);
         LocalBroadcastManager.getInstance(this).registerReceiver(playbackStartedReceiver, playbackStartedFilter);
-
+        // BroadcastReceiver for paused state from StreamService
         BroadcastReceiver playbackPausedReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -310,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
         };
         IntentFilter playbackPausedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_PAUSED);
         LocalBroadcastManager.getInstance(this).registerReceiver(playbackPausedReceiver, playbackPausedFilter);
-
+        // BroadcastReceiver for stopped state from StreamService
         BroadcastReceiver playbackStoppedReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -328,7 +329,7 @@ public class MainActivity extends AppCompatActivity {
         };
         IntentFilter playbackStoppedFilter = new IntentFilter(Constants.ACTION_PLAYBACK_STOPPED);
         LocalBroadcastManager.getInstance(this).registerReceiver(playbackStoppedReceiver, playbackStoppedFilter);
-
+        // BroadcastReceiver for buffer progress state from StreamService
         BroadcastReceiver progressReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {

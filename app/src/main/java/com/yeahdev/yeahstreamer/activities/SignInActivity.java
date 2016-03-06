@@ -2,6 +2,7 @@ package com.yeahdev.yeahstreamer.activities;
 
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -57,6 +58,7 @@ public class SignInActivity extends AppCompatActivity {
         btnSignIn = (Button) findViewById(R.id.btnSignIn);
         btnRegister = (Button) findViewById(R.id.btnRegister);
         tvRegister = (TextView) findViewById(R.id.tvRegister);
+        tvRegister.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
     }
 
     private void setupListener() {
