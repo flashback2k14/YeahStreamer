@@ -1,66 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:id="@+id/llDialog"
     android:layout_width="300dp"
-    android:layout_height="220dp"
-    android:padding="10dp"
-    android:background="@color/windowBackground">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/addname"
-        android:textSize="20sp"
-        android:textColor="@color/textColor"
-        android:textStyle="bold"/>
-
-    <EditText
-        android:id="@+id/etRadioStationName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColor"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/addstadion"
-        android:textSize="20sp"
-        android:textColor="@color/textColor"
-        android:textStyle="bold"/>
-
-    <EditText
-        android:id="@+id/etRadioStationUrl"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textColor"
-        android:inputType="textUri"/>
+    android:layout_height="wrap_content"
+    android:paddingLeft="20dp"
+    android:paddingTop="20dp"
+    android:paddingRight="20dp"
+    android:background="@color/windowBackgroundLight"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:orientation="horizontal"
-        android:layout_marginTop="10dp">
+        android:id="@+id/llTopDialog"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.6"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvRsName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="5dp"
+            android:text="@string/addname"
+            android:textSize="20sp"
+            android:textColor="@color/textColorDark"
+            android:textStyle="bold">
+        </TextView>
+
+        <EditText
+            android:id="@+id/etRadioStationName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/textColorDark">
+            <requestFocus/>
+        </EditText>
+
+        <TextView
+            android:id="@+id/tvRsUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:paddingLeft="5dp"
+            android:text="@string/addstadion"
+            android:textSize="20sp"
+            android:textColor="@color/textColorDark"
+            android:textStyle="bold">
+        </TextView>
+
+        <EditText
+            android:id="@+id/etRadioStationUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/textColorDark"
+            android:inputType="textUri">
+        </EditText>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llBottomDialog"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.4"
+        android:gravity="bottom|right"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btnCancel"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:text="@string/cancel"
-            android:textColor="@color/textColor"
-            android:background="@color/colorAccent"/>
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textColor="@color/colorAccent"
+            style="?buttonBarNegativeButtonStyle"
+            android:layout_margin="5dp">
+        </Button>
 
         <Button
             android:id="@+id/btnOk"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_marginLeft="10dp"
-            android:layout_marginRight="5dp"
             android:text="@string/ok"
-            android:textColor="@color/textColor"
-            android:background="@color/colorPrimary"/>
-
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textColor="@color/colorPrimary"
+            style="?buttonBarPositiveButtonStyle"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="0dp"
+            android:layout_marginBottom="5dp">
+        </Button>
     </LinearLayout>
-
 </LinearLayout>

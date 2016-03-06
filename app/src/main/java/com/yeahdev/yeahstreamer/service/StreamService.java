@@ -1,8 +1,5 @@
-package com.yeahdev.yeahstreamer.services;
+package com.yeahdev.yeahstreamer.service;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -17,8 +14,8 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.yeahdev.yeahstreamer.R;
-import com.yeahdev.yeahstreamer.activities.MainActivity;
-import com.yeahdev.yeahstreamer.util.Constants;
+import com.yeahdev.yeahstreamer.utils.Constants;
+import com.yeahdev.yeahstreamer.utils.NotificationWrapper;
 
 import java.io.IOException;
 
@@ -39,6 +36,7 @@ public class StreamService extends Service implements
     private int mInstanceCounter;
     private boolean mPlayback;
 
+    private NotificationWrapper mNotificationWrapper;
     private AudioManager mAudioManager;
     private MediaPlayer mMediaPlayer;
 
@@ -46,7 +44,7 @@ public class StreamService extends Service implements
     @Override
     public void onCreate() {
         super.onCreate();
-
+        mNotificationWrapper = new NotificationWrapper(getApplicationContext(), this);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     }
 
@@ -58,7 +56,6 @@ public class StreamService extends Service implements
         }
 
         switch (intent.getAction()) {
-
             case Constants.ACTION_PLAY:
 
                 if (intent.hasExtra(Constants.EXTRA_STATION_NAME)) {
@@ -70,30 +67,37 @@ public class StreamService extends Service implements
 
                 mPlayback = true;
                 preparePlayback();
-                buildNotification(generateAction(R.drawable.ic_pause_24dp, "Pause", Constants.ACTION_PAUSE));
-                mInstanceCounter++;
 
+                mNotificationWrapper.setRadioStationName(mStationName + " - Playing");
+                NotificationCompat.Action actionPause = mNotificationWrapper.generateAction(R.drawable.ic_pause_24dp, "Pause", Constants.ACTION_PAUSE);
+                mNotificationWrapper.buildNotification(actionPause);
+
+                mInstanceCounter++;
                 break;
 
             case Constants.ACTION_PAUSE:
+                mPlayback = false;
                 pausePlayback();
-                buildNotification(generateAction(R.drawable.ic_play_arrow_24dp, "Play", Constants.ACTION_PLAY));
-                mInstanceCounter = 0;
 
+                mNotificationWrapper.setRadioStationName(mStationName + " - Paused");
+                NotificationCompat.Action actionPlay = mNotificationWrapper.generateAction(R.drawable.ic_play_arrow_24dp, "Play", Constants.ACTION_PLAY);
+                mNotificationWrapper.buildNotification(actionPlay);
+
+                mInstanceCounter = 0;
                 break;
 
             case Constants.ACTION_STOP:
                 mPlayback = false;
                 finishPlayback();
-                mInstanceCounter = 0;
 
+                mInstanceCounter = 0;
                 break;
 
             default:
                 break;
         }
 
-        return START_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
     /**
@@ -135,42 +139,7 @@ public class StreamService extends Service implements
         i.setAction(Constants.ACTION_PLAYBACK_STOPPED);
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
 
-        NotificationManager notificationManager = (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(Constants.NOTIFICATION_ID);
-    }
-
-    /**
-     * NOTIFICATION
-     */
-    private NotificationCompat.Action generateAction(int icon, String title, String intentAction) {
-        Intent intent = new Intent(getApplicationContext(), StreamService.class).setAction(intentAction);
-        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 0, intent, 0);
-        return new NotificationCompat.Action.Builder(icon, title, pendingIntent).build();
-    }
-
-    private void buildNotification(NotificationCompat.Action action) {
-        NotificationCompat.MediaStyle style = new NotificationCompat.MediaStyle();
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        builder.setSmallIcon(R.drawable.ic_radio_24dp);
-        builder.setContentTitle("Yeah! Streamer");
-        builder.setContentText(mStationName);
-        builder.setStyle(style);
-
-        builder.addAction(action);
-        builder.addAction(generateAction(R.drawable.ic_stop_24dp, "Stop", Constants.ACTION_STOP));
-        style.setShowActionsInCompactView(0, 1);
-
-        Intent openAppIntent = new Intent(getApplicationContext(), MainActivity.class);
-        PendingIntent openAppPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, openAppIntent, 0);
-        builder.setContentIntent(openAppPendingIntent);
-
-        builder.setAutoCancel(false);
-        Notification notification = builder.build();
-        notification.flags = Notification.FLAG_NO_CLEAR;
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(Constants.NOTIFICATION_ID, notification);
+        stopForeground(true);
     }
 
     /**
@@ -219,7 +188,6 @@ public class StreamService extends Service implements
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
-
     }
 
     /**
@@ -347,7 +315,13 @@ public class StreamService extends Service implements
 
     @Override
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        Log.v(LOG_TAG, "Buffering: " + percent);
+        if (percent % 5 == 0) {
+            Log.v(LOG_TAG, "Buffering: " + percent);
+            Intent i = new Intent();
+            i.setAction(Constants.ACTION_PLAYBACK_PROGRESS);
+            i.putExtra(Constants.EXTRA_BUFFER_PROGRESS, percent);
+            LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
+        }
     }
 
     /**
@@ -362,13 +336,12 @@ public class StreamService extends Service implements
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         // save state
         mPlayback = false;
         savePlaybackState();
-
-        // retrieve notification system service and cancel notification
-        NotificationManager notificationManager = (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(Constants.NOTIFICATION_ID);
+        // release media player
+        releaseMediaPlayer();
+        // stop service
+        stopForeground(true);
     }
 }

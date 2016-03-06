@@ -3,6 +3,10 @@
     <color name="colorPrimaryDark">#001c40</color>
     <color name="colorPrimary">#01295c</color>
     <color name="colorAccent">#f2003f</color>
-    <color name="windowBackground">#333333</color>
+    <color name="windowBackgroundDark">#333333</color>
+    <color name="windowBackgroundLight">#EEEEEE</color>
+    <color name="textColorDark">#333333</color>
     <color name="textColor">#EEEEEE</color>
+    <color name="itemBackground">#FFFFFF</color>
+    <color name="rvBackground">#ECEFF1</color>
 </resources>

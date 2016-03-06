@@ -1,4 +1,4 @@
-package com.yeahdev.yeahstreamer.util;
+package com.yeahdev.yeahstreamer.utils;
 
 import android.os.AsyncTask;
 import android.util.Log;

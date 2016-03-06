@@ -1,4 +1,4 @@
-package com.yeahdev.yeahstreamer.util;
+package com.yeahdev.yeahstreamer.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory;
 import android.util.Base64;
 
 import com.yeahdev.yeahstreamer.R;
-import com.yeahdev.yeahstreamer.model.RadioStation;
+import com.yeahdev.yeahstreamer.models.RadioStation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -38,7 +38,7 @@ public class Util {
         }
     }
 
-    public static RadioStation getRadioStation(Context context, String name, String url, String key) {
+    public static RadioStation getRadioStation(Context context, String name, String url) {
         String ext = Util.getFileExtension(new File(url));
         String urlSave = "";
 
@@ -67,7 +67,6 @@ public class Util {
         radioStation.setIcon(Base64.encodeToString(Util.createPlaceholderIcon(context),Base64.DEFAULT));
         radioStation.setName(name);
         radioStation.setUrl(urlSave);
-        radioStation.setKey(key);
 
         return radioStation;
     }

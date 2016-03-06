@@ -1,4 +1,5 @@
-package com.yeahdev.yeahstreamer.util;
+package com.yeahdev.yeahstreamer.utils;
+
 
 public class Constants {
 
@@ -12,11 +13,13 @@ public class Constants {
 
     public static final String EXTRA_STATION_NAME = "STATION_NAME";
     public static final String EXTRA_STATION_URI = "STATION_URI";
+    public static final String EXTRA_BUFFER_PROGRESS = "EXTRA_BUFFER_PROGRESS";
     public static final String PLAYBACK = "PLAYBACK";
 
     public static final String ACTION_PLAYBACK_STARTED = "com.yeahdev.yeahstreamer.action.PLAYBACK_STARTED";
     public static final String ACTION_PLAYBACK_PAUSED = "com.yeahdev.yeahstreamer.action.PLAYBACK_PAUSED";
     public static final String ACTION_PLAYBACK_STOPPED = "com.yeahdev.yeahstreamer.action.PLAYBACK_STOPPED";
+    public static final String ACTION_PLAYBACK_PROGRESS = "com.yeahdev.yeahstreamer.action.PLAYBACK_PROGRESS";
 
     public static final String CURRENT_PLAYING_STATE = "CURRENT_PLAYING_STATE";
     public static final String CURRENT_RADIO_STATION_ICON = "CURRENT_RADIO_STATION_ICON";
@@ -25,6 +28,11 @@ public class Constants {
     public static final String CURRENT_RADIO_STATION_KEY = "CURRENT_RADIO_STATION_KEY";
 
     public static final String FIREBASE_REF = "https://yeah-streamer.firebaseio.com/";
+    public static final String FIREBASE_ROUTE_USER = "users";
+    public static final String FIREBASE_ROUTE_RADIOSTATION = "radiostations";
+
+    public static final String FIREBASE_UPDATE_NAME = "name";
+    public static final String FIREBASE_UPDATE_URL = "url";
 
     public static final String M3U_FILE = "m3u";
     public static final String PLS_FILE = "pls";

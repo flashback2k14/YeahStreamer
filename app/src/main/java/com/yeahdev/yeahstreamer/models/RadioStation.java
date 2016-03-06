@@ -1,4 +1,4 @@
-package com.yeahdev.yeahstreamer.model;
+package com.yeahdev.yeahstreamer.models;
 
 
 public class RadioStation {
