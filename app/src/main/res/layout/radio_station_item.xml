@@ -23,6 +23,7 @@
             android:id="@+id/ivLogo"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginLeft="8dp"
             android:layout_gravity="center_vertical|center_horizontal"
             app:civ_border="true"
             app:civ_border_color="@color/colorPrimaryDark">
