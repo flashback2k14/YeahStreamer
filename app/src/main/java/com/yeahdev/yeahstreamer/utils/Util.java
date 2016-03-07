@@ -3,6 +3,8 @@ package com.yeahdev.yeahstreamer.utils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Base64;
 
 import com.yeahdev.yeahstreamer.R;
@@ -69,5 +71,22 @@ public class Util {
         radioStation.setUrl(urlSave);
 
         return radioStation;
+    }
+
+    public static boolean isInternetAvailable(Context context) {
+        return isWifiAvailable(context) || isMobileDataAvailable(context);
+    }
+
+    public static boolean isWifiAvailable(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
+    }
+
+    public static boolean isMobileDataAvailable(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE;
+
     }
 }

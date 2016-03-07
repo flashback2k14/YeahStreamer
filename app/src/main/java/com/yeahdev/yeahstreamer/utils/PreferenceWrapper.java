@@ -1,6 +1,8 @@
 package com.yeahdev.yeahstreamer.utils;
 
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+
 import com.yeahdev.yeahstreamer.models.RadioStation;
 
 
@@ -25,6 +27,17 @@ public class PreferenceWrapper {
         editor.putBoolean(Constants.CURRENT_PLAYING_STATE, playback);
         editor.apply();
     }
+    public void setPlaybackVolume(AudioManager audioManager) {
+        // current User Volume
+        int currentVolume =
+                audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) > audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) ?
+                        audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) :
+                        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        // save User Volume
+        SharedPreferences.Editor editor = this.mPreferences.edit();
+        editor.putInt(Constants.CURRENT_PLAYBACK_VOLUME, currentVolume);
+        editor.apply();
+    }
 
     public RadioStation getCurrentRadioStation() {
         if (this.mPreferences.contains(Constants.CURRENT_RADIO_STATION_ICON) &&
@@ -47,6 +60,12 @@ public class PreferenceWrapper {
     public boolean getPlaybackState() {
         return this.mPreferences.contains(Constants.CURRENT_PLAYING_STATE) &&
                 this.mPreferences.getBoolean(Constants.CURRENT_PLAYING_STATE, false);
+    }
+    public int getPlaybackVolume() {
+        if (this.mPreferences.contains(Constants.CURRENT_PLAYBACK_VOLUME)) {
+            return this.mPreferences.getInt(Constants.CURRENT_PLAYBACK_VOLUME, 5);
+        }
+        return 5;
     }
 
     public void resetCurrentRadioStation() {

@@ -3,11 +3,8 @@ package com.yeahdev.yeahstreamer.service;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -18,6 +15,8 @@ import android.util.Log;
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.utils.Constants;
 import com.yeahdev.yeahstreamer.utils.NotificationWrapper;
+import com.yeahdev.yeahstreamer.utils.PreferenceWrapper;
+import com.yeahdev.yeahstreamer.utils.Util;
 
 import java.io.IOException;
 
@@ -39,6 +38,7 @@ public class StreamService extends Service implements
     private boolean mPlayback;
 
     private NotificationWrapper mNotificationWrapper;
+    private PreferenceWrapper mPreferenceWrapper;
     private AudioManager mAudioManager;
     private MediaPlayer mMediaPlayer;
 
@@ -47,6 +47,7 @@ public class StreamService extends Service implements
     public void onCreate() {
         super.onCreate();
         mNotificationWrapper = new NotificationWrapper(getApplicationContext(), this);
+        mPreferenceWrapper = new PreferenceWrapper(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     }
 
@@ -113,7 +114,7 @@ public class StreamService extends Service implements
             initMediaPlayer();
         }
 
-        savePlaybackState();
+        mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_STARTED);
@@ -125,7 +126,7 @@ public class StreamService extends Service implements
             mMediaPlayer.pause();
         }
 
-        savePlaybackState();
+        mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_PAUSED);
@@ -134,7 +135,8 @@ public class StreamService extends Service implements
 
     private void finishPlayback() {
         releaseMediaPlayer();
-        savePlaybackState();
+
+        mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_STOPPED);
@@ -153,33 +155,6 @@ public class StreamService extends Service implements
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
     }
 
-    private void savePlaybackState () {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplication());
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putBoolean(Constants.CURRENT_PLAYBACK_STATE, mPlayback);
-        editor.apply();
-    }
-
-    /**
-     * network check
-     */
-    private boolean isInternetAvailable() {
-        return isWifiAvailable() || isMobileDataAvailable();
-    }
-
-    private boolean isWifiAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
-    }
-
-    private boolean isMobileDataAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE;
-
-    }
-
     /**
      * MEDIA PLAYER
      */
@@ -193,6 +168,7 @@ public class StreamService extends Service implements
         mMediaPlayer.setOnBufferingUpdateListener(this);
 
         try {
+            mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mPreferenceWrapper.getPlaybackVolume(), 0);
             mMediaPlayer.setDataSource(mDataSource);
             mMediaPlayer.prepareAsync();
         } catch (IOException e) {
@@ -354,7 +330,7 @@ public class StreamService extends Service implements
         // info headline
         msg.append("YEAH! Streamer - INFO").append("\n");
         // check network connection
-        if (isInternetAvailable()) {
+        if (Util.isInternetAvailable(getApplicationContext())) {
             msg.append("Network Connection is available!");
         } else {
             msg.append("No Network Connection available!");
@@ -391,9 +367,8 @@ public class StreamService extends Service implements
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // save state
+        // set state
         mPlayback = false;
-        savePlaybackState();
         // release media player
         releaseMediaPlayer();
         // stop service

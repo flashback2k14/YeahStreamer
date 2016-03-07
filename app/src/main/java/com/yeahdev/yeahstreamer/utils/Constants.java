@@ -23,6 +23,8 @@ public class Constants {
     public static final String ACTION_PLAYBACK_PROGRESS = "com.yeahdev.yeahstreamer.action.PLAYBACK_PROGRESS";
 
     public static final String CURRENT_PLAYBACK_STATE = "PLAYBACK";
+    public static final String CURRENT_PLAYBACK_VOLUME = "VOLUME";
+
     public static final String CURRENT_PLAYING_STATE = "CURRENT_PLAYING_STATE";
     public static final String CURRENT_RADIO_STATION_ICON = "CURRENT_RADIO_STATION_ICON";
     public static final String CURRENT_RADIO_STATION_NAME = "CURRENT_RADIO_STATION_NAME";
