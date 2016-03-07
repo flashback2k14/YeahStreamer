@@ -20,6 +20,11 @@ allprojects {
     }
 }
 
+ext {
+    APP_NAME = "Yeah! Streamer"
+    APP_NAME_DEV = "Yeah! Streamer Dev"
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

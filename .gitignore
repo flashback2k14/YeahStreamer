@@ -9,3 +9,5 @@
 /build
 /captures
 /app/fabric.properties
+/appkey
+/releaseApk
