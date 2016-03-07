@@ -4,7 +4,7 @@ import com.yeahdev.yeahstreamer.models.RadioStation;
 
 
 public interface IItemButtonClicked {
-    void playRadioStation(RadioStation radioStation);
-    void editRadioStation(RadioStation radioStation);
-    void deleteRadioStation(RadioStation radioStation);
+    void onPlayRadioStation(RadioStation radioStation);
+    void onEditRadioStation(RadioStation radioStation);
+    void onDeleteRadioStation(RadioStation radioStation);
 }

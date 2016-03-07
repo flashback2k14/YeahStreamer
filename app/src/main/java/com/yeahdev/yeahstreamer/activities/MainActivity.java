@@ -124,6 +124,22 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
             public void onCanceled(FirebaseError error) {
                 mProgressDialog.dismiss();
                 mToastWrapper.showLong("The read failed: " + error.getMessage());
+                switch (error.getCode()) {
+                    case FirebaseError.AUTHENTICATION_PROVIDER_DISABLED:
+                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                        MainActivity.this.finish();
+                        break;
+                    case FirebaseError.PERMISSION_DENIED:
+                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                        MainActivity.this.finish();
+                        break;
+                    case FirebaseError.PROVIDER_ERROR:
+                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                        MainActivity.this.finish();
+                        break;
+                    default:
+                        break;
+                }
             }
 
             @Override
@@ -262,12 +278,24 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
             public void onReceive(Context context, Intent intent) {
                 if (intent.hasExtra(Constants.EXTRA_BUFFER_PROGRESS)) {
                     int progress = intent.getIntExtra(Constants.EXTRA_BUFFER_PROGRESS, -1);
-                    mToastWrapper.showShort("Load Progress: " + progress);
+                    mToastWrapper.showShort("YEAH! Streamer - Buffer Progress: " + progress);
                 }
             }
         };
         IntentFilter progressFilter = new IntentFilter(Constants.ACTION_PLAYBACK_PROGRESS);
         LocalBroadcastManager.getInstance(this).registerReceiver(progressReceiver, progressFilter);
+        // BroadcastReceiver for onError or onInfo state from StreamService
+        BroadcastReceiver errorInfoReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.hasExtra(Constants.EXTRA_INFO_ERROR_MSG)) {
+                    String errorInfo = intent.getStringExtra(Constants.EXTRA_INFO_ERROR_MSG);
+                    mToastWrapper.showLong(errorInfo);
+                }
+            }
+        };
+        IntentFilter errorInfoFilter = new IntentFilter(Constants.EXTRA_INFO_ERROR_TYPE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(errorInfoReceiver, errorInfoFilter);
     }
 
     @Override
@@ -341,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     }
 
     @Override
-    public void playRadioStation(RadioStation radioStation) {
+    public void onPlayRadioStation(RadioStation radioStation) {
         //set data
         mCurrentRadioStation = radioStation;
         mIsPlaying = true;
@@ -354,7 +382,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     }
 
     @Override
-    public void editRadioStation(final RadioStation radioStation) {
+    public void onEditRadioStation(final RadioStation radioStation) {
         mDialogWrapper.buildEditDialog(radioStation.getName(), radioStation.getUrl(), new DialogWrapper.OnEditListener() {
             @Override
             public void onConfirmed(HashMap<String, Object> updateData) {
@@ -384,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     }
 
     @Override
-    public void deleteRadioStation(final RadioStation radioStation) {
+    public void onDeleteRadioStation(final RadioStation radioStation) {
         mDialogWrapper.buildDeleteDialog(new DialogWrapper.OnDeleteListener() {
             @Override
             public void onConfirmed() {

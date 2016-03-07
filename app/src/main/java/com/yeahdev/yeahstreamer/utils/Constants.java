@@ -14,13 +14,15 @@ public class Constants {
     public static final String EXTRA_STATION_NAME = "STATION_NAME";
     public static final String EXTRA_STATION_URI = "STATION_URI";
     public static final String EXTRA_BUFFER_PROGRESS = "EXTRA_BUFFER_PROGRESS";
-    public static final String PLAYBACK = "PLAYBACK";
+    public static final String EXTRA_INFO_ERROR_TYPE = "EXTRA_INFO_ERROR_TYPE";
+    public static final String EXTRA_INFO_ERROR_MSG = "EXTRA_INFO_ERROR_MSG";
 
     public static final String ACTION_PLAYBACK_STARTED = "com.yeahdev.yeahstreamer.action.PLAYBACK_STARTED";
     public static final String ACTION_PLAYBACK_PAUSED = "com.yeahdev.yeahstreamer.action.PLAYBACK_PAUSED";
     public static final String ACTION_PLAYBACK_STOPPED = "com.yeahdev.yeahstreamer.action.PLAYBACK_STOPPED";
     public static final String ACTION_PLAYBACK_PROGRESS = "com.yeahdev.yeahstreamer.action.PLAYBACK_PROGRESS";
 
+    public static final String CURRENT_PLAYBACK_STATE = "PLAYBACK";
     public static final String CURRENT_PLAYING_STATE = "CURRENT_PLAYING_STATE";
     public static final String CURRENT_RADIO_STATION_ICON = "CURRENT_RADIO_STATION_ICON";
     public static final String CURRENT_RADIO_STATION_NAME = "CURRENT_RADIO_STATION_NAME";

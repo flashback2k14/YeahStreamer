@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -107,7 +109,6 @@ public class StreamService extends Service implements
         if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
             releaseMediaPlayer();
         }
-
         if (mDataSource != null && requestFocus()) {
             initMediaPlayer();
         }
@@ -155,8 +156,28 @@ public class StreamService extends Service implements
     private void savePlaybackState () {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplication());
         SharedPreferences.Editor editor = settings.edit();
-        editor.putBoolean(Constants.PLAYBACK, mPlayback);
+        editor.putBoolean(Constants.CURRENT_PLAYBACK_STATE, mPlayback);
         editor.apply();
+    }
+
+    /**
+     * network check
+     */
+    private boolean isInternetAvailable() {
+        return isWifiAvailable() || isMobileDataAvailable();
+    }
+
+    private boolean isWifiAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
+    }
+
+    private boolean isMobileDataAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE;
+
     }
 
     /**
@@ -255,43 +276,62 @@ public class StreamService extends Service implements
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        // error message
+        StringBuilder msg = new StringBuilder();
+        // error headline
+        msg.append("YEAH! Streamer - ERROR").append("\n");
+        // what is the error
         switch (what) {
             case MediaPlayer.MEDIA_ERROR_UNKNOWN:
                 Log.e(LOG_TAG, "Unknown media playback error");
+                msg.append("Unknown media playback error.");
                 break;
             case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
                 Log.e(LOG_TAG, "Connection to server lost");
+                msg.append("Connection to server lost.");
                 break;
             default:
                 Log.e(LOG_TAG, "Generic audio playback error");
+                msg.append("Generic audio playback error.");
                 break;
         }
-
+        // extra error message
         switch (extra) {
             case MediaPlayer.MEDIA_ERROR_IO:
                 Log.e(LOG_TAG, "IO media error.");
+                msg.append("IO media error.");
                 break;
             case MediaPlayer.MEDIA_ERROR_MALFORMED:
                 Log.e(LOG_TAG, "Malformed media.");
+                msg.append("Malformed media.");
                 break;
             case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
                 Log.e(LOG_TAG, "Unsupported content type");
+                msg.append("Unsupported content type.");
                 break;
             case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
                 Log.e(LOG_TAG, "Media timeout");
+                msg.append("Media timeout.");
                 break;
             default:
                 Log.e(LOG_TAG, "Other case of media playback error");
+                msg.append("Other case of media playback error.");
                 break;
         }
-
+        // Send error message as intent to main activity
+        Intent i = new Intent();
+        i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
+        i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
+        LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
+        // reset media player
         mp.reset();
-
+        // return value
         return true;
     }
 
     @Override
     public boolean onInfo(MediaPlayer mp, int what, int extra) {
+        // what is the info
         switch (what){
             case MediaPlayer.MEDIA_INFO_UNKNOWN:
                 Log.i(LOG_TAG, "Unknown media info");
@@ -302,14 +342,29 @@ public class StreamService extends Service implements
             case MediaPlayer.MEDIA_INFO_BUFFERING_END:
                 Log.i(LOG_TAG, "Buffering finished");
                 break;
-            case MediaPlayer.MEDIA_INFO_METADATA_UPDATE: // case never selected
+            case MediaPlayer.MEDIA_INFO_METADATA_UPDATE:
                 Log.i(LOG_TAG, "New metadata available");
                 break;
             default:
                 Log.i(LOG_TAG, "other case of media info");
                 break;
         }
-
+        // info message
+        StringBuilder msg = new StringBuilder();
+        // info headline
+        msg.append("YEAH! Streamer - INFO").append("\n");
+        // check network connection
+        if (isInternetAvailable()) {
+            msg.append("Network Connection is available!");
+        } else {
+            msg.append("No Network Connection available!");
+        }
+        // Send error message as intent to main activity
+        Intent i = new Intent();
+        i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
+        i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
+        LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
+        // return value
         return true;
     }
 

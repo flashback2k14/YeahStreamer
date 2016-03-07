@@ -103,19 +103,19 @@ public class RadioStationRvAdapter
         holder.getLlItem().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RadioStationRvAdapter.this.mItemButtonClicked.playRadioStation(radioStation);
+                RadioStationRvAdapter.this.mItemButtonClicked.onPlayRadioStation(radioStation);
             }
         });
         holder.getFabEdit().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RadioStationRvAdapter.this.mItemButtonClicked.editRadioStation(radioStation);
+                RadioStationRvAdapter.this.mItemButtonClicked.onEditRadioStation(radioStation);
             }
         });
         holder.getFabDelete().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RadioStationRvAdapter.this.mItemButtonClicked.deleteRadioStation(radioStation);
+                RadioStationRvAdapter.this.mItemButtonClicked.onDeleteRadioStation(radioStation);
             }
         });
     }
