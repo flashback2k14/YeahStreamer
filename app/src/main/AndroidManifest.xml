@@ -36,5 +36,8 @@
                 <action android:name="com.yeahdev.yeahstreamer.action.STOP" />
             </intent-filter>
         </service>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="e2376ae426afaceaa4dda40596f95aa16afe4cb7" />
     </application>
 </manifest>
