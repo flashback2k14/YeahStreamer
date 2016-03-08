@@ -12,6 +12,26 @@
     tools:showIn="@layout/activity_main"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+    <LinearLayout
+        android:id="@+id/llNoStationsAvailable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvNoStationsAvailable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/nostations"
+            android:textSize="35sp"
+            android:textColor="@color/textColorDark">
+        </TextView>
+
+    </LinearLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rvRadioStations"
         android:layout_width="match_parent"

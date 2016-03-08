@@ -12,8 +12,10 @@
 
     <string name="signinToMain">SignInToMainActivity</string>
 
+    <string name="nostations">No Radio Stations\navailable!</string>
+
     <string name="addname">Add Radio Station Name</string>
     <string name="addstadion">Add Radio Station URL</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 </resources>

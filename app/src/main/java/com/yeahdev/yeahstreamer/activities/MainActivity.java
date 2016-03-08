@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.firebase.client.FirebaseError;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     private FloatingActionButton mFabAdd;
 
     private ProgressDialog mProgressDialog;
+    private LinearLayout mLlNoStationsAvailable;
     private RecyclerView mStationRecyclerView;
 
     private Toolbar mTbPlayer;
@@ -87,8 +89,10 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mFabAdd = (FloatingActionButton) findViewById(R.id.fab);
         mProgressDialog = ProgressDialog.show(this, "Loading", "Get Radio Stations from Firebase...", false, true);
+        mFabAdd = (FloatingActionButton) findViewById(R.id.fab);
+
+        mLlNoStationsAvailable = (LinearLayout) findViewById(R.id.llNoStationsAvailable);
 
         mStationRecyclerView = (RecyclerView) findViewById(R.id.rvRadioStations);
         mStationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -114,10 +118,16 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         mFbWrapper.loadData(Constants.FIREBASE_ROUTE_RADIOSTATION, new FirebaseWrapper.OnLoadListener() {
             @Override
             public void onLoaded(ArrayList<RadioStation> radioStations) {
-                mStationList.clear();
-                mStationList.addAll(radioStations);
-                mStationRvAdapter.notifyDataSetChanged();
-                mProgressDialog.dismiss();
+                if (radioStations.size() == 0) {
+                    mLlNoStationsAvailable.setVisibility(View.VISIBLE);
+                    mProgressDialog.dismiss();
+                } else {
+                    mLlNoStationsAvailable.setVisibility(View.GONE);
+                    mStationList.clear();
+                    mStationList.addAll(radioStations);
+                    mStationRvAdapter.notifyDataSetChanged();
+                    mProgressDialog.dismiss();
+                }
             }
 
             @Override
