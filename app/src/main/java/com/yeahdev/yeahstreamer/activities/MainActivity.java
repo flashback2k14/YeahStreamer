@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -34,6 +35,7 @@ import com.yeahdev.yeahstreamer.utils.DialogWrapper;
 import com.yeahdev.yeahstreamer.utils.FirebaseWrapper;
 import com.yeahdev.yeahstreamer.utils.PreferenceWrapper;
 import com.yeahdev.yeahstreamer.utils.ToastWrapper;
+import com.yeahdev.yeahstreamer.utils.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     private TextView mPlayerSelectedName;
     private ImageView mPlayerControl;
     private ImageView mPlayerControlStop;
+
+    private Snackbar mSnackbar;
 
     private FirebaseWrapper mFbWrapper;
     private DialogWrapper mDialogWrapper;
@@ -89,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mProgressDialog = ProgressDialog.show(this, "Loading", "Get Radio Stations from Firebase...", false, true);
         mFabAdd = (FloatingActionButton) findViewById(R.id.fab);
 
         mLlNoStationsAvailable = (LinearLayout) findViewById(R.id.llNoStationsAvailable);
@@ -115,51 +118,70 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     }
 
     private void loadRadioStations() {
-        mFbWrapper.loadData(Constants.FIREBASE_ROUTE_RADIOSTATION, new FirebaseWrapper.OnLoadListener() {
-            @Override
-            public void onLoaded(ArrayList<RadioStation> radioStations) {
-                if (radioStations.size() == 0) {
-                    mLlNoStationsAvailable.setVisibility(View.VISIBLE);
-                    mProgressDialog.dismiss();
-                } else {
-                    mLlNoStationsAvailable.setVisibility(View.GONE);
-                    mStationList.clear();
-                    mStationList.addAll(radioStations);
-                    mStationRvAdapter.notifyDataSetChanged();
-                    mProgressDialog.dismiss();
+        // check internet connection
+        if (Util.isInternetAvailable(this)) {
+            // Show Progress Dialog
+            mProgressDialog = ProgressDialog.show(this, "Loading", "Get Radio Stations from Firebase...", false, true);
+            // Load data from Firebase
+            mFbWrapper.loadData(Constants.FIREBASE_ROUTE_RADIOSTATION, new FirebaseWrapper.OnLoadListener() {
+                @Override
+                public void onLoaded(ArrayList<RadioStation> radioStations) {
+                    if (radioStations.size() == 0) {
+                        mLlNoStationsAvailable.setVisibility(View.VISIBLE);
+                        mProgressDialog.dismiss();
+                    } else {
+                        mLlNoStationsAvailable.setVisibility(View.GONE);
+                        mStationList.clear();
+                        mStationList.addAll(radioStations);
+                        mStationRvAdapter.notifyDataSetChanged();
+                        mProgressDialog.dismiss();
+                    }
                 }
-            }
 
-            @Override
-            public void onCanceled(FirebaseError error) {
-                mProgressDialog.dismiss();
-                mToastWrapper.showLong("The read failed: " + error.getMessage());
-                switch (error.getCode()) {
-                    case FirebaseError.AUTHENTICATION_PROVIDER_DISABLED:
-                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                        MainActivity.this.finish();
-                        break;
-                    case FirebaseError.PERMISSION_DENIED:
-                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                        MainActivity.this.finish();
-                        break;
-                    case FirebaseError.PROVIDER_ERROR:
-                        startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                        MainActivity.this.finish();
-                        break;
-                    default:
-                        break;
+                @Override
+                public void onCanceled(FirebaseError error) {
+                    mProgressDialog.dismiss();
+                    mToastWrapper.showLong("The read failed: " + error.getMessage());
+                    switch (error.getCode()) {
+                        case FirebaseError.AUTHENTICATION_PROVIDER_DISABLED:
+                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                            MainActivity.this.finish();
+                            break;
+                        case FirebaseError.PERMISSION_DENIED:
+                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                            MainActivity.this.finish();
+                            break;
+                        case FirebaseError.PROVIDER_ERROR:
+                            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                            MainActivity.this.finish();
+                            break;
+                        default:
+                            break;
+                    }
                 }
-            }
 
-            @Override
-            public void onExpired(String msg) {
-                mProgressDialog.dismiss();
-                mToastWrapper.showShort(msg);
-                startActivity(new Intent(MainActivity.this, SignInActivity.class));
-                MainActivity.this.finish();
+                @Override
+                public void onExpired(String msg) {
+                    mProgressDialog.dismiss();
+                    mToastWrapper.showShort(msg);
+                    startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                    MainActivity.this.finish();
+                }
+            });
+        } else {
+            if (mSnackbar != null) {
+                mSnackbar.dismiss();
             }
-        });
+            mSnackbar = Snackbar
+                    .make(mStationRecyclerView, "No Internet Connection available!", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Retry", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            loadRadioStations();
+                        }
+                    });
+            mSnackbar.show();
+        }
     }
 
     private void setupListener() {

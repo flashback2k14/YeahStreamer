@@ -90,7 +90,6 @@ public class SignInActivity extends AppCompatActivity {
                     mToastWrapper.showShort("Email Address is empty!");
                     return;
                 }
-
                 String password = etPassword.getText().toString();
                 if (TextUtils.isEmpty(password)) {
                     mToastWrapper.showShort("Password is empty!");
@@ -135,19 +134,16 @@ public class SignInActivity extends AppCompatActivity {
                     mToastWrapper.showShort("Email Address is empty!");
                     return;
                 }
-
                 final String password = etPassword.getText().toString();
                 if (TextUtils.isEmpty(password)) {
                     mToastWrapper.showShort("Password is empty!");
                     return;
                 }
-
                 String passwordAgain = etPasswordAgain.getText().toString();
                 if (TextUtils.isEmpty(passwordAgain)) {
                     mToastWrapper.showShort("Password again is empty!");
                     return;
                 }
-
                 if (!password.matches(passwordAgain)) {
                     mToastWrapper.showShort("Passwords not matching!");
                     etPassword.setText("");
