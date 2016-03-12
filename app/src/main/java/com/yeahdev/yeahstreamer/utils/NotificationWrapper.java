@@ -52,6 +52,8 @@ public class NotificationWrapper {
         builder.setContentIntent(openAppPendingIntent);
 
         builder.setAutoCancel(false);
+        builder.setOngoing(true);
+
         Notification notification = builder.build();
         notification.flags |= Notification.FLAG_NO_CLEAR;
         notification.flags |= Notification.FLAG_ONGOING_EVENT;

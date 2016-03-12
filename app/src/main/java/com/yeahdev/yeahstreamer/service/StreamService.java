@@ -9,7 +9,6 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.yeahdev.yeahstreamer.R;
@@ -60,40 +59,21 @@ public class StreamService extends Service implements
 
         switch (intent.getAction()) {
             case Constants.ACTION_PLAY:
-
                 if (intent.hasExtra(Constants.EXTRA_STATION_NAME)) {
                     mStationName = intent.getStringExtra(Constants.EXTRA_STATION_NAME);
                 }
                 if (intent.hasExtra(Constants.EXTRA_STATION_URI)) {
                     mDataSource = intent.getStringExtra(Constants.EXTRA_STATION_URI);
                 }
-
-                mPlayback = true;
-                preparePlayback();
-
-                mNotificationWrapper.setRadioStationName(mStationName + " - Playing");
-                NotificationCompat.Action actionPause = mNotificationWrapper.generateAction(R.drawable.ic_pause_24dp, "Pause", Constants.ACTION_PAUSE);
-                mNotificationWrapper.buildNotification(actionPause);
-
-                mInstanceCounter++;
+                startPlayback();
                 break;
 
             case Constants.ACTION_PAUSE:
-                mPlayback = false;
                 pausePlayback();
-
-                mNotificationWrapper.setRadioStationName(mStationName + " - Paused");
-                NotificationCompat.Action actionPlay = mNotificationWrapper.generateAction(R.drawable.ic_play_arrow_24dp, "Play", Constants.ACTION_PLAY);
-                mNotificationWrapper.buildNotification(actionPlay);
-
-                mInstanceCounter = 0;
                 break;
 
             case Constants.ACTION_STOP:
-                mPlayback = false;
-                finishPlayback();
-
-                mInstanceCounter = 0;
+                stopPlayback();
                 break;
 
             default:
@@ -106,7 +86,7 @@ public class StreamService extends Service implements
     /**
      * PLAYER ACTIONS
      */
-    private void preparePlayback() {
+    private void startPlayback() {
         if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
             releaseMediaPlayer();
         }
@@ -114,7 +94,13 @@ public class StreamService extends Service implements
             initMediaPlayer();
         }
 
+        mPlayback = true;
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
+
+        mNotificationWrapper.setRadioStationName(mStationName + " - Playing");
+        mNotificationWrapper.buildNotification(mNotificationWrapper.generateAction(R.drawable.ic_pause_24dp, "Pause", Constants.ACTION_PAUSE));
+
+        mInstanceCounter++;
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_STARTED);
@@ -126,33 +112,40 @@ public class StreamService extends Service implements
             mMediaPlayer.pause();
         }
 
+        mPlayback = false;
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
+
+        mNotificationWrapper.setRadioStationName(mStationName + " - Paused");
+        mNotificationWrapper.buildNotification(mNotificationWrapper.generateAction(R.drawable.ic_play_arrow_24dp, "Play", Constants.ACTION_PLAY));
+
+        mInstanceCounter = 0;
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_PAUSED);
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
     }
 
-    private void finishPlayback() {
+    private void stopPlayback() {
         releaseMediaPlayer();
 
+        mPlayback = false;
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
+
+        mInstanceCounter = 0;
+        stopForeground(true);
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_STOPPED);
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
-
-        stopForeground(true);
     }
 
     /**
      * UTIL
      */
     private boolean requestFocus() {
-        int result = mAudioManager.requestAudioFocus(this,
+        return mAudioManager.requestAudioFocus(this,
                 AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN);
-        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+                AudioManager.AUDIOFOCUS_GAIN) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
     }
 
     /**
@@ -195,33 +188,24 @@ public class StreamService extends Service implements
         switch (focusChange) {
             // gain of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_GAIN:
-                if (mPlayback) {
-                    if (mMediaPlayer == null) {
-                        initMediaPlayer();
-                    } else if (!mMediaPlayer.isPlaying()) {
-                        mMediaPlayer.start();
-                    }
-                    mMediaPlayer.setVolume(1.0f, 1.0f);
-                }
+                startPlayback();
+                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mPreferenceWrapper.getPlaybackVolume(), 0);
                 break;
             // loss of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_LOSS:
-                finishPlayback();
+                pausePlayback();
                 break;
             // transient loss of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                if (!mPlayback && mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                    finishPlayback();
-                }
-                else if (mPlayback && mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.pause();
-                }
+                pausePlayback();
                 break;
             // temporary external request of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                 if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
                     mMediaPlayer.setVolume(0.1f, 0.1f);
                 }
+                break;
+            default:
                 break;
         }
     }
