@@ -162,9 +162,15 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
 
                 @Override
                 public void onExpired(String msg) {
+                    // dismiss progress dialog
                     mProgressDialog.dismiss();
+                    // show info to the user
                     mToastWrapper.showShort(msg);
+                    // stop stream service
+                    startService(new Intent(MainActivity.this, StreamService.class).setAction(Constants.ACTION_STOP));
+                    // go to sign in activity
                     startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                    // destroy main activity
                     MainActivity.this.finish();
                 }
             });

@@ -32,9 +32,7 @@ public class StreamService extends Service implements
 
     private String mStationName;
     private String mDataSource;
-
     private int mInstanceCounter;
-    private boolean mPlayback;
 
     private NotificationWrapper mNotificationWrapper;
     private PreferenceWrapper mPreferenceWrapper;
@@ -94,7 +92,7 @@ public class StreamService extends Service implements
             initMediaPlayer();
         }
 
-        mPlayback = true;
+        mPreferenceWrapper.setPlaybackStateService(true);
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         mNotificationWrapper.setRadioStationName(mStationName + " - Playing");
@@ -112,7 +110,7 @@ public class StreamService extends Service implements
             mMediaPlayer.pause();
         }
 
-        mPlayback = false;
+        mPreferenceWrapper.setPlaybackStateService(false);
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         mNotificationWrapper.setRadioStationName(mStationName + " - Paused");
@@ -128,7 +126,9 @@ public class StreamService extends Service implements
     private void stopPlayback() {
         releaseMediaPlayer();
 
-        mPlayback = false;
+        mDataSource = null;
+
+        mPreferenceWrapper.setPlaybackStateService(false);
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         mInstanceCounter = 0;
@@ -188,16 +188,22 @@ public class StreamService extends Service implements
         switch (focusChange) {
             // gain of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_GAIN:
-                startPlayback();
-                mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mPreferenceWrapper.getPlaybackVolume(), 0);
+                if (mMediaPlayer != null || mPreferenceWrapper.getPlaybackStateService()) {
+                    startPlayback();
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mPreferenceWrapper.getPlaybackVolume(), 0);
+                }
                 break;
             // loss of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_LOSS:
-                pausePlayback();
+                if (mMediaPlayer != null && mPreferenceWrapper.getPlaybackStateService()) {
+                    pausePlayback();
+                }
                 break;
             // transient loss of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                pausePlayback();
+                if (mMediaPlayer != null && mPreferenceWrapper.getPlaybackStateService()) {
+                    pausePlayback();
+                }
                 break;
             // temporary external request of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
@@ -351,8 +357,10 @@ public class StreamService extends Service implements
     @Override
     public void onDestroy() {
         super.onDestroy();
+        // reset data source
+        mDataSource = null;
         // set state
-        mPlayback = false;
+        mPreferenceWrapper.setPlaybackStateService(false);
         // release media player
         releaseMediaPlayer();
         // stop service

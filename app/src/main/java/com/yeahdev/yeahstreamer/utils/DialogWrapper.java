@@ -51,6 +51,10 @@ public class DialogWrapper {
         this.mToastWrapper = new ToastWrapper(context);
     }
 
+    /**
+     * Get Dialog for Dismiss Dialog outside the Wrapper
+     * @return Dialog
+     */
     public Dialog getDialog() {
         return this.mDialog;
     }
@@ -84,7 +88,7 @@ public class DialogWrapper {
                         return;
                     }
 
-                    RadioStation radioStation = Util.getRadioStation(DialogWrapper.this.mContext, name, url);
+                    RadioStation radioStation = Util.createRadioStation(DialogWrapper.this.mContext, name, url);
 
                     etName.setText("");
                     etUrl.setText("");

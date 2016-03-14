@@ -84,7 +84,6 @@ public class SignInActivity extends AppCompatActivity {
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 String emailAddress = etEmailAddress.getText().toString();
                 if (TextUtils.isEmpty(emailAddress)) {
                     mToastWrapper.showShort("Email Address is empty!");
@@ -95,7 +94,9 @@ public class SignInActivity extends AppCompatActivity {
                     mToastWrapper.showShort("Password is empty!");
                     return;
                 }
-
+                // info to the user
+                mToastWrapper.showLong("Logging in...");
+                // login new user
                 mFbWrapper.authWithPassword(emailAddress, password, new FirebaseWrapper.OnAuthListener() {
                     @Override
                     public void onSuccess(AuthData authData) {
@@ -128,7 +129,6 @@ public class SignInActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 final String emailAddress = etEmailAddress.getText().toString();
                 if (TextUtils.isEmpty(emailAddress)) {
                     mToastWrapper.showShort("Email Address is empty!");
@@ -151,6 +151,9 @@ public class SignInActivity extends AppCompatActivity {
                     return;
                 }
 
+                // info to the user
+                mToastWrapper.showLong("Signing in...");
+                // register new user
                 mFbWrapper.createAndLoginUser(emailAddress, password, new FirebaseWrapper.OnCreatedListener() {
                     @Override
                     public void onSuccess(String msg) {
