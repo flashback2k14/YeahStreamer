@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 
 import com.yeahdev.yeahstreamer.models.RadioStation;
+import com.yeahdev.yeahstreamer.service.StreamService;
 
 
 public class PreferenceWrapper {
@@ -36,9 +37,9 @@ public class PreferenceWrapper {
         editor.putBoolean(Constants.CURRENT_PLAYING_STATE, playback);
         editor.apply();
     }
-    public void setPlaybackStateService(boolean playbackState) {
+    public void setPlaybackStateService(int playbackState) {
         SharedPreferences.Editor editor = this.mPreferences.edit();
-        editor.putBoolean(Constants.CURRENT_PLAYBACK_STATE, playbackState);
+        editor.putInt(Constants.CURRENT_PLAYBACK_STATE, playbackState);
         editor.apply();
     }
     public void setPlaybackVolume(AudioManager audioManager) {
@@ -81,9 +82,11 @@ public class PreferenceWrapper {
         return this.mPreferences.contains(Constants.CURRENT_PLAYING_STATE) &&
                 this.mPreferences.getBoolean(Constants.CURRENT_PLAYING_STATE, false);
     }
-    public boolean getPlaybackStateService() {
-        return this.mPreferences.contains(Constants.CURRENT_PLAYBACK_STATE) &&
-                this.mPreferences.getBoolean(Constants.CURRENT_PLAYBACK_STATE, false);
+    public int getPlaybackStateService() {
+        if (this.mPreferences.contains(Constants.CURRENT_PLAYBACK_STATE)) {
+            return this.mPreferences.getInt(Constants.CURRENT_PLAYBACK_STATE, StreamService.IS_STOPPED);
+        }
+        return StreamService.IS_STOPPED;
     }
     public int getPlaybackVolume() {
         if (this.mPreferences.contains(Constants.CURRENT_PLAYBACK_VOLUME)) {

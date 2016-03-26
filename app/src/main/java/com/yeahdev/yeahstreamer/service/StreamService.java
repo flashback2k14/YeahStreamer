@@ -28,6 +28,11 @@ public class StreamService extends Service implements
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnInfoListener {
 
+    public static final int IS_PLAYING = 1;
+    public static final int IS_PAUSED = 2;
+    public static final int IS_PAUSED_ON_FOCUS_CHANGED = 3;
+    public static final int IS_STOPPED = 4;
+
     private static final String LOG_TAG = StreamService.class.getSimpleName();
 
     private String mStationName;
@@ -67,7 +72,7 @@ public class StreamService extends Service implements
                 break;
 
             case Constants.ACTION_PAUSE:
-                pausePlayback();
+                pausePlayback(false);
                 break;
 
             case Constants.ACTION_STOP:
@@ -92,7 +97,7 @@ public class StreamService extends Service implements
             initMediaPlayer();
         }
 
-        mPreferenceWrapper.setPlaybackStateService(true);
+        mPreferenceWrapper.setPlaybackStateService(StreamService.IS_PLAYING);
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         mNotificationWrapper.setRadioStationName(mStationName + " - Playing");
@@ -105,12 +110,16 @@ public class StreamService extends Service implements
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
     }
 
-    private void pausePlayback() {
+    private void pausePlayback(boolean onAudioFocusChanged) {
         if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
         }
 
-        mPreferenceWrapper.setPlaybackStateService(false);
+        if (onAudioFocusChanged) {
+            mPreferenceWrapper.setPlaybackStateService(StreamService.IS_PAUSED_ON_FOCUS_CHANGED);
+        } else {
+            mPreferenceWrapper.setPlaybackStateService(StreamService.IS_PAUSED);
+        }
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         mNotificationWrapper.setRadioStationName(mStationName + " - Paused");
@@ -128,7 +137,7 @@ public class StreamService extends Service implements
 
         mDataSource = null;
 
-        mPreferenceWrapper.setPlaybackStateService(false);
+        mPreferenceWrapper.setPlaybackStateService(StreamService.IS_STOPPED);
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
 
         mInstanceCounter = 0;
@@ -188,27 +197,33 @@ public class StreamService extends Service implements
         switch (focusChange) {
             // gain of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_GAIN:
-                if (mMediaPlayer != null || mPreferenceWrapper.getPlaybackStateService()) {
-                    startPlayback();
-                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mPreferenceWrapper.getPlaybackVolume(), 0);
+                switch (mPreferenceWrapper.getPlaybackStateService()) {
+                    case StreamService.IS_PLAYING:
+                        mMediaPlayer.setVolume(1.0f, 1.0f);
+                        break;
+                    case StreamService.IS_PAUSED_ON_FOCUS_CHANGED:
+                        startPlayback();
+                        break;
+                    default:
+                        break;
                 }
                 break;
             // loss of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_LOSS:
-                if (mMediaPlayer != null && mPreferenceWrapper.getPlaybackStateService()) {
-                    pausePlayback();
+                if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PLAYING) {
+                    pausePlayback(true);
                 }
                 break;
             // transient loss of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                if (mMediaPlayer != null && mPreferenceWrapper.getPlaybackStateService()) {
-                    pausePlayback();
+                if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PLAYING) {
+                    pausePlayback(true);
                 }
                 break;
             // temporary external request of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.setVolume(0.1f, 0.1f);
+                if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PLAYING) {
+                    mMediaPlayer.setVolume(0.2f, 0.2f);
                 }
                 break;
             default:
@@ -315,21 +330,24 @@ public class StreamService extends Service implements
                 Log.i(LOG_TAG, "other case of media info");
                 break;
         }
-        // info message
-        StringBuilder msg = new StringBuilder();
-        // info headline
-        msg.append("YEAH! Streamer - INFO").append("\n");
-        // check network connection
-        if (Util.isInternetAvailable(getApplicationContext())) {
-            msg.append("Network Connection is available!");
-        } else {
-            msg.append("No Network Connection available!");
+        if (mp.isPlaying()) {
+            // info message
+            StringBuilder msg = new StringBuilder();
+            // info headline
+            msg.append("YEAH! Streamer - INFO").append("\n");
+            // check network connection
+            if (Util.isInternetAvailable(getApplicationContext())) {
+                msg.append("Network Connection is available!");
+            } else {
+                msg.append("No Network Connection available!");
+            }
+            // Send error message as intent to main activity
+            Intent i = new Intent();
+            i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
+            i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
+            LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
+
         }
-        // Send error message as intent to main activity
-        Intent i = new Intent();
-        i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
-        i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
-        LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
         // return value
         return true;
     }
@@ -360,7 +378,7 @@ public class StreamService extends Service implements
         // reset data source
         mDataSource = null;
         // set state
-        mPreferenceWrapper.setPlaybackStateService(false);
+        mPreferenceWrapper.setPlaybackStateService(StreamService.IS_STOPPED);
         // release media player
         releaseMediaPlayer();
         // stop service
