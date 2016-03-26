@@ -12,6 +12,7 @@
     tools:showIn="@layout/activity_main"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+    <!-- Show Message, if no radio stations are available -->
     <LinearLayout
         android:id="@+id/llNoStationsAvailable"
         android:layout_width="match_parent"
@@ -29,9 +30,35 @@
             android:textSize="35sp"
             android:textColor="@color/textColorDark">
         </TextView>
-
     </LinearLayout>
 
+    <!-- Show Message, if no network connection is available -->
+    <LinearLayout
+        android:id="@+id/llNoNetworkAvailable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center_horizontal|top"
+            android:src="@drawable/ic_signal_cellular_no_internet_24dp">
+        </ImageView>
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginLeft="30dp"
+            android:layout_gravity="center_horizontal|top"
+            android:src="@drawable/ic_signal_wifi_off_24dp">
+        </ImageView>
+    </LinearLayout>
+
+    <!-- Radio Stattions holder -->
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rvRadioStations"
         android:layout_width="match_parent"
@@ -40,6 +67,7 @@
         android:background="@color/rvBackground">
     </android.support.v7.widget.RecyclerView>
 
+    <!-- Player -->
     <android.support.v7.widget.Toolbar
         android:id="@+id/tbPlayer"
         android:layout_width="match_parent"

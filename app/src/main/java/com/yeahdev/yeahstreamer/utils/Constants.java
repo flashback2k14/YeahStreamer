@@ -14,8 +14,12 @@ public class Constants {
     public static final String EXTRA_STATION_NAME = "STATION_NAME";
     public static final String EXTRA_STATION_URI = "STATION_URI";
     public static final String EXTRA_BUFFER_PROGRESS = "EXTRA_BUFFER_PROGRESS";
-    public static final String EXTRA_INFO_ERROR_TYPE = "EXTRA_INFO_ERROR_TYPE";
-    public static final String EXTRA_INFO_ERROR_MSG = "EXTRA_INFO_ERROR_MSG";
+    public static final String EXTRA_ERROR_TYPE = "EXTRA_ERROR_TYPE";
+    public static final String EXTRA_ERROR_MSG = "EXTRA_ERROR_MSG";
+    public static final String EXTRA_NETWORK_CHECK = "EXTRA_NETWORK_CHECK";
+    public static final String EXTRA_NETWORK_FLAG = "EXTRA_NETWORK_FLAG";
+    public static final String EXTRA_NETWORK_MSG = "EXTRA_NETWORK_MSG";
+
 
     public static final String ACTION_PLAYBACK_STARTED = "com.yeahdev.yeahstreamer.action.PLAYBACK_STARTED";
     public static final String ACTION_PLAYBACK_PAUSED = "com.yeahdev.yeahstreamer.action.PLAYBACK_PAUSED";

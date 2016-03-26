@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
 
     private ProgressDialog mProgressDialog;
     private LinearLayout mLlNoStationsAvailable;
+    private LinearLayout mLlNoNetworkAvailable;
     private RecyclerView mStationRecyclerView;
 
     private Toolbar mTbPlayer;
@@ -96,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         mFabAdd = (FloatingActionButton) findViewById(R.id.fab);
 
         mLlNoStationsAvailable = (LinearLayout) findViewById(R.id.llNoStationsAvailable);
+        mLlNoNetworkAvailable = (LinearLayout) findViewById(R.id.llNoNetworkAvailable);
 
         mStationRecyclerView = (RecyclerView) findViewById(R.id.rvRadioStations);
         mStationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -121,7 +123,9 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         // check internet connection
         if (Util.isInternetAvailable(this)) {
             // Show Progress Dialog
-            mProgressDialog = ProgressDialog.show(this, "Loading", "Get Radio Stations from Firebase...", false, true);
+            mProgressDialog = ProgressDialog.show(this, "Loading", "Get Radio Stations from Firebase...", false, false);
+            // hide icons
+            mLlNoNetworkAvailable.setVisibility(View.GONE);
             // Load data from Firebase
             mFbWrapper.loadData(Constants.FIREBASE_ROUTE_RADIOSTATION, new FirebaseWrapper.OnLoadListener() {
                 @Override
@@ -175,9 +179,13 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
                 }
             });
         } else {
+            // show icons
+            mLlNoNetworkAvailable.setVisibility(View.VISIBLE);
+            // dismiss snackbar
             if (mSnackbar != null) {
                 mSnackbar.dismiss();
             }
+            // build snackbar
             mSnackbar = Snackbar
                     .make(mStationRecyclerView, "No Internet Connection available!", Snackbar.LENGTH_INDEFINITE)
                     .setAction("Retry", new View.OnClickListener() {
@@ -186,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
                             loadRadioStations();
                         }
                     });
+            // show snackbar
             mSnackbar.show();
         }
     }
@@ -226,18 +235,10 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
             @Override
             public void onClick(View v) {
                 if (mIsPlaying) {
-                    // start service to pause stream
-                    Intent intent = new Intent(MainActivity.this, StreamService.class);
-                    intent.setAction(Constants.ACTION_PAUSE);
-                    startService(intent);
+                    pausePlayer();
                 } else {
                     if (mCurrentRadioStation != null) {
-                        // start service to play stream
-                        Intent intent = new Intent(MainActivity.this, StreamService.class);
-                        intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
-                        intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
-                        intent.setAction(Constants.ACTION_PLAY);
-                        startService(intent);
+                        startPlayer();
                     } else {
                         mToastWrapper.showLong("Something went wrong to play the Stream - mPlayerControl.");
                     }
@@ -248,10 +249,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         mPlayerControlStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // start service to stop stream
-                Intent intent = new Intent(MainActivity.this, StreamService.class);
-                intent.setAction(Constants.ACTION_STOP);
-                startService(intent);
+                stopPlayer();
             }
         });
     }
@@ -323,17 +321,62 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         IntentFilter progressFilter = new IntentFilter(Constants.ACTION_PLAYBACK_PROGRESS);
         LocalBroadcastManager.getInstance(this).registerReceiver(progressReceiver, progressFilter);
         // BroadcastReceiver for onError or onInfo state from StreamService
-        BroadcastReceiver errorInfoReceiver = new BroadcastReceiver() {
+        BroadcastReceiver errorReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (intent.hasExtra(Constants.EXTRA_INFO_ERROR_MSG)) {
-                    String errorInfo = intent.getStringExtra(Constants.EXTRA_INFO_ERROR_MSG);
-                    mToastWrapper.showLong(errorInfo);
+                if (intent.hasExtra(Constants.EXTRA_ERROR_MSG)) {
+                    String error = intent.getStringExtra(Constants.EXTRA_ERROR_MSG);
+                    mToastWrapper.showLong(error);
                 }
             }
         };
-        IntentFilter errorInfoFilter = new IntentFilter(Constants.EXTRA_INFO_ERROR_TYPE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(errorInfoReceiver, errorInfoFilter);
+        IntentFilter errorFilter = new IntentFilter(Constants.EXTRA_ERROR_TYPE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(errorReceiver, errorFilter);
+        // BroadcastReceiver for Network Availability
+        BroadcastReceiver networkReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.hasExtra(Constants.EXTRA_NETWORK_FLAG)) {
+                    String message = intent.getStringExtra(Constants.EXTRA_NETWORK_MSG);
+                    if (intent.getBooleanExtra(Constants.EXTRA_NETWORK_FLAG, false)) {
+                        if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PAUSED) {
+                            startPlayer();
+                            mToastWrapper.showLong(message);
+                        }
+                    } else {
+                        if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PLAYING) {
+                            pausePlayer();
+                            mToastWrapper.showLong(message);
+                        }
+                    }
+                }
+            }
+        };
+        IntentFilter networkFilter = new IntentFilter(Constants.EXTRA_NETWORK_CHECK);
+        LocalBroadcastManager.getInstance(this).registerReceiver(networkReceiver, networkFilter);
+    }
+
+    private void startPlayer() {
+        // start service to play stream
+        Intent intent = new Intent(MainActivity.this, StreamService.class);
+        intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
+        intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
+        intent.setAction(Constants.ACTION_PLAY);
+        startService(intent);
+    }
+
+    private void pausePlayer() {
+        // start service to pause stream
+        Intent intent = new Intent(MainActivity.this, StreamService.class);
+        intent.setAction(Constants.ACTION_PAUSE);
+        startService(intent);
+    }
+
+    private void stopPlayer() {
+        // start service to stop stream
+        Intent intent = new Intent(MainActivity.this, StreamService.class);
+        intent.setAction(Constants.ACTION_STOP);
+        startService(intent);
     }
 
     @Override
@@ -412,11 +455,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         mCurrentRadioStation = radioStation;
         mIsPlaying = true;
         // start service to play stream
-        Intent intent = new Intent(MainActivity.this, StreamService.class);
-        intent.putExtra(Constants.EXTRA_STATION_NAME, mCurrentRadioStation.getName());
-        intent.putExtra(Constants.EXTRA_STATION_URI, mCurrentRadioStation.getUrl());
-        intent.setAction(Constants.ACTION_PLAY);
-        startService(intent);
+        startPlayer();
     }
 
     @Override

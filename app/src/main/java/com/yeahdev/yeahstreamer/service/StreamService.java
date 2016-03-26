@@ -15,7 +15,6 @@ import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.utils.Constants;
 import com.yeahdev.yeahstreamer.utils.NotificationWrapper;
 import com.yeahdev.yeahstreamer.utils.PreferenceWrapper;
-import com.yeahdev.yeahstreamer.utils.Util;
 
 import java.io.IOException;
 
@@ -301,8 +300,8 @@ public class StreamService extends Service implements
         }
         // Send error message as intent to main activity
         Intent i = new Intent();
-        i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
-        i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
+        i.setAction(Constants.EXTRA_ERROR_TYPE);
+        i.putExtra(Constants.EXTRA_ERROR_MSG, msg.toString());
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
         // reset media player
         mp.reset();
@@ -329,24 +328,6 @@ public class StreamService extends Service implements
             default:
                 Log.i(LOG_TAG, "other case of media info");
                 break;
-        }
-        if (mp.isPlaying()) {
-            // info message
-            StringBuilder msg = new StringBuilder();
-            // info headline
-            msg.append("YEAH! Streamer - INFO").append("\n");
-            // check network connection
-            if (Util.isInternetAvailable(getApplicationContext())) {
-                msg.append("Network Connection is available!");
-            } else {
-                msg.append("No Network Connection available!");
-            }
-            // Send error message as intent to main activity
-            Intent i = new Intent();
-            i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
-            i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
-            LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
-
         }
         // return value
         return true;
