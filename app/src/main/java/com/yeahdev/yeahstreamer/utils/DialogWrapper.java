@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,6 +37,7 @@ public class DialogWrapper {
      */
     private Context mContext;
     private Dialog mDialog;
+    private ToastWrapper mToastWrapper;
 
     /**
      * Constructor
@@ -46,8 +48,13 @@ public class DialogWrapper {
         this.mDialog = new Dialog(this.mContext);
         this.mDialog.setCancelable(false);
         this.mDialog.setContentView(R.layout.add_dialog);
+        this.mToastWrapper = new ToastWrapper(context);
     }
 
+    /**
+     * Get Dialog for Dismiss Dialog outside the Wrapper
+     * @return Dialog
+     */
     public Dialog getDialog() {
         return this.mDialog;
     }
@@ -71,7 +78,17 @@ public class DialogWrapper {
                 if (listener != null) {
                     String name = etName.getText().toString();
                     String url = etUrl.getText().toString();
-                    RadioStation radioStation = Util.getRadioStation(DialogWrapper.this.mContext, name, url);
+
+                    if (TextUtils.isEmpty(name)) {
+                        mToastWrapper.showShort("Radio Station Name is not set!");
+                        return;
+                    }
+                    if (TextUtils.isEmpty(url)) {
+                        mToastWrapper.showShort("Radio Station URL is not set!");
+                        return;
+                    }
+
+                    RadioStation radioStation = Util.createRadioStation(DialogWrapper.this.mContext, name, url);
 
                     etName.setText("");
                     etUrl.setText("");
@@ -110,9 +127,21 @@ public class DialogWrapper {
             @Override
             public void onClick(View v) {
                 if (listener != null) {
+                    String name = etName.getText().toString();
+                    String url = etUrl.getText().toString();
+
+                    if (TextUtils.isEmpty(name)) {
+                        mToastWrapper.showShort("Radio Station Name is not set!");
+                        return;
+                    }
+                    if (TextUtils.isEmpty(url)) {
+                        mToastWrapper.showShort("Radio Station URL is not set!");
+                        return;
+                    }
+
                     HashMap<String, Object> updateData = new HashMap<>(2);
-                    updateData.put(Constants.FIREBASE_UPDATE_NAME, etName.getText().toString());
-                    updateData.put(Constants.FIREBASE_UPDATE_URL, etUrl.getText().toString());
+                    updateData.put(Constants.FIREBASE_UPDATE_NAME, name);
+                    updateData.put(Constants.FIREBASE_UPDATE_URL, url);
 
                     etName.setText("");
                     etUrl.setText("");

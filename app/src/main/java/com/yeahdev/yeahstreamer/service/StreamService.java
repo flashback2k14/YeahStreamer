@@ -9,14 +9,12 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.yeahdev.yeahstreamer.R;
 import com.yeahdev.yeahstreamer.utils.Constants;
 import com.yeahdev.yeahstreamer.utils.NotificationWrapper;
 import com.yeahdev.yeahstreamer.utils.PreferenceWrapper;
-import com.yeahdev.yeahstreamer.utils.Util;
 
 import java.io.IOException;
 
@@ -29,13 +27,16 @@ public class StreamService extends Service implements
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnInfoListener {
 
+    public static final int IS_PLAYING = 1;
+    public static final int IS_PAUSED = 2;
+    public static final int IS_PAUSED_ON_FOCUS_CHANGED = 3;
+    public static final int IS_STOPPED = 4;
+
     private static final String LOG_TAG = StreamService.class.getSimpleName();
 
     private String mStationName;
     private String mDataSource;
-
     private int mInstanceCounter;
-    private boolean mPlayback;
 
     private NotificationWrapper mNotificationWrapper;
     private PreferenceWrapper mPreferenceWrapper;
@@ -60,40 +61,21 @@ public class StreamService extends Service implements
 
         switch (intent.getAction()) {
             case Constants.ACTION_PLAY:
-
                 if (intent.hasExtra(Constants.EXTRA_STATION_NAME)) {
                     mStationName = intent.getStringExtra(Constants.EXTRA_STATION_NAME);
                 }
                 if (intent.hasExtra(Constants.EXTRA_STATION_URI)) {
                     mDataSource = intent.getStringExtra(Constants.EXTRA_STATION_URI);
                 }
-
-                mPlayback = true;
-                preparePlayback();
-
-                mNotificationWrapper.setRadioStationName(mStationName + " - Playing");
-                NotificationCompat.Action actionPause = mNotificationWrapper.generateAction(R.drawable.ic_pause_24dp, "Pause", Constants.ACTION_PAUSE);
-                mNotificationWrapper.buildNotification(actionPause);
-
-                mInstanceCounter++;
+                startPlayback();
                 break;
 
             case Constants.ACTION_PAUSE:
-                mPlayback = false;
-                pausePlayback();
-
-                mNotificationWrapper.setRadioStationName(mStationName + " - Paused");
-                NotificationCompat.Action actionPlay = mNotificationWrapper.generateAction(R.drawable.ic_play_arrow_24dp, "Play", Constants.ACTION_PLAY);
-                mNotificationWrapper.buildNotification(actionPlay);
-
-                mInstanceCounter = 0;
+                pausePlayback(false);
                 break;
 
             case Constants.ACTION_STOP:
-                mPlayback = false;
-                finishPlayback();
-
-                mInstanceCounter = 0;
+                stopPlayback();
                 break;
 
             default:
@@ -106,7 +88,7 @@ public class StreamService extends Service implements
     /**
      * PLAYER ACTIONS
      */
-    private void preparePlayback() {
+    private void startPlayback() {
         if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
             releaseMediaPlayer();
         }
@@ -114,45 +96,64 @@ public class StreamService extends Service implements
             initMediaPlayer();
         }
 
+        mPreferenceWrapper.setPlaybackStateService(StreamService.IS_PLAYING);
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
+
+        mNotificationWrapper.setRadioStationName(mStationName + " - Playing");
+        mNotificationWrapper.buildNotification(mNotificationWrapper.generateAction(R.drawable.ic_pause_24dp, "Pause", Constants.ACTION_PAUSE));
+
+        mInstanceCounter++;
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_STARTED);
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
     }
 
-    private void pausePlayback() {
+    private void pausePlayback(boolean onAudioFocusChanged) {
         if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
         }
 
+        if (onAudioFocusChanged) {
+            mPreferenceWrapper.setPlaybackStateService(StreamService.IS_PAUSED_ON_FOCUS_CHANGED);
+        } else {
+            mPreferenceWrapper.setPlaybackStateService(StreamService.IS_PAUSED);
+        }
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
+
+        mNotificationWrapper.setRadioStationName(mStationName + " - Paused");
+        mNotificationWrapper.buildNotification(mNotificationWrapper.generateAction(R.drawable.ic_play_arrow_24dp, "Play", Constants.ACTION_PLAY));
+
+        mInstanceCounter = 0;
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_PAUSED);
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
     }
 
-    private void finishPlayback() {
+    private void stopPlayback() {
         releaseMediaPlayer();
 
+        mDataSource = null;
+
+        mPreferenceWrapper.setPlaybackStateService(StreamService.IS_STOPPED);
         mPreferenceWrapper.setPlaybackVolume(mAudioManager);
+
+        mInstanceCounter = 0;
+        stopForeground(true);
 
         Intent i = new Intent();
         i.setAction(Constants.ACTION_PLAYBACK_STOPPED);
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
-
-        stopForeground(true);
     }
 
     /**
      * UTIL
      */
     private boolean requestFocus() {
-        int result = mAudioManager.requestAudioFocus(this,
+        return mAudioManager.requestAudioFocus(this,
                 AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN);
-        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+                AudioManager.AUDIOFOCUS_GAIN) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
     }
 
     /**
@@ -195,33 +196,36 @@ public class StreamService extends Service implements
         switch (focusChange) {
             // gain of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_GAIN:
-                if (mPlayback) {
-                    if (mMediaPlayer == null) {
-                        initMediaPlayer();
-                    } else if (!mMediaPlayer.isPlaying()) {
-                        mMediaPlayer.start();
-                    }
-                    mMediaPlayer.setVolume(1.0f, 1.0f);
+                switch (mPreferenceWrapper.getPlaybackStateService()) {
+                    case StreamService.IS_PLAYING:
+                        mMediaPlayer.setVolume(1.0f, 1.0f);
+                        break;
+                    case StreamService.IS_PAUSED_ON_FOCUS_CHANGED:
+                        startPlayback();
+                        break;
+                    default:
+                        break;
                 }
                 break;
             // loss of audio focus of unknown duration
             case AudioManager.AUDIOFOCUS_LOSS:
-                finishPlayback();
+                if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PLAYING) {
+                    pausePlayback(true);
+                }
                 break;
             // transient loss of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                if (!mPlayback && mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                    finishPlayback();
-                }
-                else if (mPlayback && mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.pause();
+                if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PLAYING) {
+                    pausePlayback(true);
                 }
                 break;
             // temporary external request of audio focus
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.setVolume(0.1f, 0.1f);
+                if (mPreferenceWrapper.getPlaybackStateService() == StreamService.IS_PLAYING) {
+                    mMediaPlayer.setVolume(0.2f, 0.2f);
                 }
+                break;
+            default:
                 break;
         }
     }
@@ -296,8 +300,8 @@ public class StreamService extends Service implements
         }
         // Send error message as intent to main activity
         Intent i = new Intent();
-        i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
-        i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
+        i.setAction(Constants.EXTRA_ERROR_TYPE);
+        i.putExtra(Constants.EXTRA_ERROR_MSG, msg.toString());
         LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
         // reset media player
         mp.reset();
@@ -325,21 +329,6 @@ public class StreamService extends Service implements
                 Log.i(LOG_TAG, "other case of media info");
                 break;
         }
-        // info message
-        StringBuilder msg = new StringBuilder();
-        // info headline
-        msg.append("YEAH! Streamer - INFO").append("\n");
-        // check network connection
-        if (Util.isInternetAvailable(getApplicationContext())) {
-            msg.append("Network Connection is available!");
-        } else {
-            msg.append("No Network Connection available!");
-        }
-        // Send error message as intent to main activity
-        Intent i = new Intent();
-        i.setAction(Constants.EXTRA_INFO_ERROR_TYPE);
-        i.putExtra(Constants.EXTRA_INFO_ERROR_MSG, msg.toString());
-        LocalBroadcastManager.getInstance(this.getApplication()).sendBroadcast(i);
         // return value
         return true;
     }
@@ -367,8 +356,10 @@ public class StreamService extends Service implements
     @Override
     public void onDestroy() {
         super.onDestroy();
+        // reset data source
+        mDataSource = null;
         // set state
-        mPlayback = false;
+        mPreferenceWrapper.setPlaybackStateService(StreamService.IS_STOPPED);
         // release media player
         releaseMediaPlayer();
         // stop service

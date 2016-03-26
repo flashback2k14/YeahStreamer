@@ -4,16 +4,26 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 
 import com.yeahdev.yeahstreamer.models.RadioStation;
+import com.yeahdev.yeahstreamer.service.StreamService;
 
 
 public class PreferenceWrapper {
-
+    /**
+     * private Member
+     */
     private SharedPreferences mPreferences;
 
+    /**
+     * Constructor
+     * @param preferences - SharedPreferences
+     */
     public PreferenceWrapper(SharedPreferences preferences) {
         this.mPreferences = preferences;
     }
 
+    /**
+     * BEGIN SETTER METHODS
+     */
     public void setCurrentRadioStation(RadioStation radioStation) {
         SharedPreferences.Editor editor = this.mPreferences.edit();
         editor.putString(Constants.CURRENT_RADIO_STATION_ICON, radioStation.getIcon());
@@ -27,6 +37,11 @@ public class PreferenceWrapper {
         editor.putBoolean(Constants.CURRENT_PLAYING_STATE, playback);
         editor.apply();
     }
+    public void setPlaybackStateService(int playbackState) {
+        SharedPreferences.Editor editor = this.mPreferences.edit();
+        editor.putInt(Constants.CURRENT_PLAYBACK_STATE, playbackState);
+        editor.apply();
+    }
     public void setPlaybackVolume(AudioManager audioManager) {
         // current User Volume
         int currentVolume =
@@ -38,7 +53,13 @@ public class PreferenceWrapper {
         editor.putInt(Constants.CURRENT_PLAYBACK_VOLUME, currentVolume);
         editor.apply();
     }
+    /**
+     * END SETTER METHODS
+     */
 
+    /**
+     * BEGIN GETTER METHODS
+     */
     public RadioStation getCurrentRadioStation() {
         if (this.mPreferences.contains(Constants.CURRENT_RADIO_STATION_ICON) &&
             this.mPreferences.contains(Constants.CURRENT_RADIO_STATION_NAME) &&
@@ -61,13 +82,25 @@ public class PreferenceWrapper {
         return this.mPreferences.contains(Constants.CURRENT_PLAYING_STATE) &&
                 this.mPreferences.getBoolean(Constants.CURRENT_PLAYING_STATE, false);
     }
+    public int getPlaybackStateService() {
+        if (this.mPreferences.contains(Constants.CURRENT_PLAYBACK_STATE)) {
+            return this.mPreferences.getInt(Constants.CURRENT_PLAYBACK_STATE, StreamService.IS_STOPPED);
+        }
+        return StreamService.IS_STOPPED;
+    }
     public int getPlaybackVolume() {
         if (this.mPreferences.contains(Constants.CURRENT_PLAYBACK_VOLUME)) {
             return this.mPreferences.getInt(Constants.CURRENT_PLAYBACK_VOLUME, 5);
         }
         return 5;
     }
+    /**
+     * END GETTER METHODS
+     */
 
+    /**
+     * BEGIN RESET METHODS
+     */
     public void resetCurrentRadioStation() {
         SharedPreferences.Editor editor = this.mPreferences.edit();
         editor.remove(Constants.CURRENT_RADIO_STATION_ICON);
@@ -81,4 +114,7 @@ public class PreferenceWrapper {
         editor.remove(Constants.CURRENT_PLAYING_STATE);
         editor.apply();
     }
+    /**
+     * END RESET METHODS
+     */
 }

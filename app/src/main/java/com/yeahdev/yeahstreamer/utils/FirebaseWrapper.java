@@ -56,7 +56,6 @@ public class FirebaseWrapper {
         this.mLoadListener = null;
     }
 
-
     /**
      * BEGIN UTIL
      */
@@ -134,10 +133,13 @@ public class FirebaseWrapper {
      * @param listener - Callback Listener
      */
     public void createAndLoginUser(final String email, final String password, final OnCreatedListener listener) {
+        // create new user
         this.mBaseRef.createUser(email, password, new Firebase.ResultHandler() {
             @Override
             public void onSuccess() {
+                // auth the user
                 authWithPassword(email, password, new OnAuthListener() {
+                    // on success log in the user
                     @Override
                     public void onSuccess(AuthData authData) {
                         if (listener != null) {
@@ -148,6 +150,7 @@ public class FirebaseWrapper {
                             user.setProfileImage(authData.getProviderData().get("profileImageURL").toString());
                             user.setProvider(authData.getProvider());
 
+                            // save user data on firebase
                             addItem(Constants.FIREBASE_ROUTE_USER, user, new OnChangedListener() {
                                 @Override
                                 public void onSuccess(String msg) {
@@ -166,7 +169,7 @@ public class FirebaseWrapper {
                             });
                         }
                     }
-
+                    // on failed show info to the user
                     @Override
                     public void onFailed(FirebaseError error) {
                         if (listener != null) {
@@ -175,7 +178,7 @@ public class FirebaseWrapper {
                     }
                 });
             }
-
+            // error the create new user
             @Override
             public void onError(FirebaseError firebaseError) {
                 if (listener != null) {

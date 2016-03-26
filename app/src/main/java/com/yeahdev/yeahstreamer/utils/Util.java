@@ -19,6 +19,11 @@ public class Util {
 
     private Util() {}
 
+    /**
+     * Create Placeholder Icon, because custom icons not implemented yet
+     * @param context - Android Context
+     * @return byte[]
+     */
     public static byte[] createPlaceholderIcon(Context context) {
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -26,11 +31,21 @@ public class Util {
         return stream.toByteArray();
     }
 
+    /**
+     * Get Username from email address
+     * @param email - Email Address
+     * @return String
+     */
     public static String getUsername(Object email) {
         String mail = (String) email;
         return mail.split("@")[0];
     }
 
+    /**
+     * Extract extension from file
+     * @param file - File
+     * @return String
+     */
     public static String getFileExtension(File file) {
         String name = file.getName();
         if (name.isEmpty()) {
@@ -40,10 +55,19 @@ public class Util {
         }
     }
 
-    public static RadioStation getRadioStation(Context context, String name, String url) {
+    /**
+     * Create a new Radio Station
+     * @param context - Android Context
+     * @param name - Radio Station Name
+     * @param url - Radio Station URL
+     * @return RadioStation
+     */
+    public static RadioStation createRadioStation(Context context, String name, String url) {
+        // get file extension
         String ext = Util.getFileExtension(new File(url));
+        // url holder if url must extract from .m3u or .pls
         String urlSave = "";
-
+        // check file extension
         switch (ext) {
             case Constants.M3U_FILE:
                 try {
@@ -64,29 +88,39 @@ public class Util {
             default:
                 urlSave = url;
         }
-
+        // create Radio Station
         RadioStation radioStation = new RadioStation();
         radioStation.setIcon(Base64.encodeToString(Util.createPlaceholderIcon(context),Base64.DEFAULT));
         radioStation.setName(name);
         radioStation.setUrl(urlSave);
-
+        // return Radio Station
         return radioStation;
     }
 
+    /**
+     * BEGIN NETWORK CHECK
+     */
+    /**
+     * Check if Wifi or Mobile Data is available
+     * @param context - Android Context
+     * @return boolean
+     */
     public static boolean isInternetAvailable(Context context) {
-        return isWifiAvailable(context) || isMobileDataAvailable(context);
+        return isSpecificConnectionAvailable(context, ConnectivityManager.TYPE_WIFI) ||
+                isSpecificConnectionAvailable(context, ConnectivityManager.TYPE_MOBILE);
     }
-
-    public static boolean isWifiAvailable(Context context) {
+    /**
+     * Check specific Network availability
+     * @param context - Android Context
+     * @param type - ConnectivityManager Type
+     * @return boolean
+     */
+    public static boolean isSpecificConnectionAvailable(Context context, int type) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
+        return networkInfo != null && networkInfo.getType() == type;
     }
-
-    public static boolean isMobileDataAvailable(Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE;
-
-    }
+    /**
+     * END NETWORK CHECK
+     */
 }
