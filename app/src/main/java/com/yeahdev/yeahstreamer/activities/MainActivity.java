@@ -74,6 +74,13 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         setContentView(R.layout.activity_main);
 
         initWrapper();
+
+        String userId = mFbWrapper.getUserId();
+        if (userId == null) {
+            startActivity(new Intent(MainActivity.this, SignInActivity.class));
+            MainActivity.this.finish();
+        }
+
         initControls();
         initAdapter();
 
@@ -171,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
                     // show info to the user
                     mToastWrapper.showShort(msg);
                     // stop stream service
-                    startService(new Intent(MainActivity.this, StreamService.class).setAction(Constants.ACTION_STOP));
+                    stopPlayer();
                     // go to sign in activity
                     startActivity(new Intent(MainActivity.this, SignInActivity.class));
                     // destroy main activity

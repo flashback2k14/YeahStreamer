@@ -286,7 +286,7 @@ public class FirebaseWrapper {
                 }
             };
             this.mListenerMap.put(userStationRef, this.mLoadListener);
-            userStationRef.addValueEventListener(this.mLoadListener);
+            userStationRef.orderByChild("name").addValueEventListener(this.mLoadListener);
         } else {
             if (listener != null) {
                 listener.onExpired("User login expired!");
