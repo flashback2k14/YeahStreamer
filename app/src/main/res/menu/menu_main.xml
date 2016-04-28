@@ -3,9 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".activities.MainActivity" >
 
+    <item android:id="@+id/action_about"
+        android:title="@string/action_about"
+        android:orderInCategory="100"
+        android:icon="@drawable/ic_info_outline_24dp"
+        app:showAsAction="always" />
+
     <item android:id="@+id/action_logout"
         android:title="@string/action_logout"
-        android:orderInCategory="100"
+        android:orderInCategory="110"
         android:icon="@drawable/ic_eject_24dp"
         app:showAsAction="always" />
 </menu>

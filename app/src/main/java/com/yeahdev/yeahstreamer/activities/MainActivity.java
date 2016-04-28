@@ -30,6 +30,7 @@ import com.yeahdev.yeahstreamer.adapter.RadioStationRvAdapter;
 import com.yeahdev.yeahstreamer.interfaces.IItemButtonClicked;
 import com.yeahdev.yeahstreamer.models.RadioStation;
 import com.yeahdev.yeahstreamer.service.StreamService;
+import com.yeahdev.yeahstreamer.utils.AboutDialog;
 import com.yeahdev.yeahstreamer.utils.Constants;
 import com.yeahdev.yeahstreamer.utils.DialogWrapper;
 import com.yeahdev.yeahstreamer.utils.FirebaseWrapper;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     private DialogWrapper mDialogWrapper;
     private ToastWrapper mToastWrapper;
     private PreferenceWrapper mPreferenceWrapper;
+    private AboutDialog mAboutDialog;
 
     private RadioStation mCurrentRadioStation;
     private boolean mIsPlaying;
@@ -95,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         mDialogWrapper = new DialogWrapper(this);
         mToastWrapper = new ToastWrapper(this);
         mPreferenceWrapper = new PreferenceWrapper(PreferenceManager.getDefaultSharedPreferences(this));
+        mAboutDialog = new AboutDialog(this);
     }
 
     private void initControls() {
@@ -439,6 +442,10 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_about:
+                mAboutDialog.createAboutDialog();
+                return true;
+
             case R.id.action_logout:
                 mDialogWrapper.buildLogoutDialog(new DialogWrapper.OnLogoutListener() {
                     @Override

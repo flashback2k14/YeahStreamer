@@ -10,7 +10,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
-        versionName "0.9.9.2"
+        versionName "0.9.9.3"
         setProperty("archivesBaseName", "YeahStreamer-$versionName")
     }
 
@@ -53,4 +53,6 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true;
     }
+    // about page
+    compile 'com.github.medyo:android-about-page:1.0.4'
 }
