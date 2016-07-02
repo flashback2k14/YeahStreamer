@@ -20,12 +20,20 @@
         android:layout_gravity="top"
         android:orientation="vertical">
 
+        <ImageButton
+            android:id="@+id/btnInfoLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:src="@drawable/ic_info_outline_24dp"
+            android:background="#00ffffff" />
+
         <com.mikhaellopez.circularimageview.CircularImageView
             android:id="@+id/civLogo"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="50dp"
+            android:layout_marginTop="30dp"
             android:src="@mipmap/ic_launcher"
             app:civ_border="true"
             app:civ_border_color="@color/colorPrimaryDark">

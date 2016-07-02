@@ -35,7 +35,7 @@ public class AboutDialog {
                 .isRTL(false)
                 .setImage(R.mipmap.ic_launcher)
                 .setDescription("Yeah! Streamer is an App to play online radio station streams!")
-                .addItem(createElement("Version 0.9.9.2"))
+                .addItem(createElement("Version 0.9.9.4"))
                 .addGroup("Used Libraries")
                 .addItem(createElement("Android About Page by medyo", "https://github.com/medyo/android-about-page"))
                 .addItem(createElement("Circular Image View by mikhaellopez", "https://github.com/lopspower/CircularImageView"))

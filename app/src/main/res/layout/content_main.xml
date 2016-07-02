@@ -97,7 +97,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="right"
-            android:layout_marginRight="10dp"
+            android:layout_marginRight="5dp"
             android:padding="@dimen/activity_horizontal_margin_half"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_stop_24dp">
@@ -108,7 +108,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="right"
-            android:layout_marginRight="5dp"
+            android:layout_marginRight="0dp"
             android:padding="@dimen/activity_horizontal_margin_half"
             android:background="?attr/selectableItemBackgroundBorderless">
         </ImageView>

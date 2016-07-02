@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initWrapper();
+        mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
 
         String userId = mFbWrapper.getUserId();
         if (userId == null) {
@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
             MainActivity.this.finish();
         }
 
+        initWrapper();
         initControls();
         initAdapter();
 
@@ -93,7 +94,6 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
     }
 
     private void initWrapper() {
-        mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
         mDialogWrapper = new DialogWrapper(this);
         mToastWrapper = new ToastWrapper(this);
         mPreferenceWrapper = new PreferenceWrapper(PreferenceManager.getDefaultSharedPreferences(this));
@@ -115,7 +115,9 @@ public class MainActivity extends AppCompatActivity implements IItemButtonClicke
         mStationRecyclerView.setHasFixedSize(true);
 
         mTbPlayer = (Toolbar) findViewById(R.id.tbPlayer);
-        mTbPlayer.setVisibility(View.GONE);
+        if (mTbPlayer != null) {
+            mTbPlayer.setVisibility(View.GONE);
+        }
 
         mPlayerSelectedIcon = (ImageView) findViewById(R.id.current_radio_station_logo);
         mPlayerSelectedName = (TextView) findViewById(R.id.current_radio_station_name);

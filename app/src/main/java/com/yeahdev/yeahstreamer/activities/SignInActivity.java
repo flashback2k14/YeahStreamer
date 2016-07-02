@@ -10,11 +10,13 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.FirebaseError;
 import com.yeahdev.yeahstreamer.R;
+import com.yeahdev.yeahstreamer.utils.AboutDialog;
 import com.yeahdev.yeahstreamer.utils.Constants;
 import com.yeahdev.yeahstreamer.utils.FirebaseWrapper;
 import com.yeahdev.yeahstreamer.utils.ToastWrapper;
@@ -22,6 +24,7 @@ import com.yeahdev.yeahstreamer.utils.ToastWrapper;
 
 public class SignInActivity extends AppCompatActivity {
 
+    private ImageButton btnInfoLogin;
     private EditText etEmailAddress;
     private EditText etPassword;
     private EditText etPasswordAgain;
@@ -31,6 +34,7 @@ public class SignInActivity extends AppCompatActivity {
 
     private FirebaseWrapper mFbWrapper;
     private ToastWrapper mToastWrapper;
+    private AboutDialog mAboutDialog;
     private boolean isLogin = true;
 
     @Override
@@ -39,29 +43,44 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_in);
 
         mFbWrapper = new FirebaseWrapper(Constants.FIREBASE_REF);
-        mToastWrapper = new ToastWrapper(this);
 
         String userId = mFbWrapper.getUserId();
         if (userId != null) {
             startActivity(new Intent(SignInActivity.this, MainActivity.class));
             SignInActivity.this.finish();
         } else {
+            initWrapper();
             initComponents();
             setupListener();
         }
     }
 
+    private void initWrapper() {
+        mToastWrapper = new ToastWrapper(this);
+        mAboutDialog = new AboutDialog(this);
+    }
+
     private void initComponents() {
+        btnInfoLogin = (ImageButton) findViewById(R.id.btnInfoLogin);
         etEmailAddress = (EditText) findViewById(R.id.etEmail);
         etPassword = (EditText) findViewById(R.id.etPassword);
         etPasswordAgain = (EditText) findViewById(R.id.etPasswordAgain);
         btnSignIn = (Button) findViewById(R.id.btnSignIn);
         btnRegister = (Button) findViewById(R.id.btnRegister);
         tvRegister = (TextView) findViewById(R.id.tvRegister);
-        tvRegister.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
+        if (tvRegister != null) {
+            tvRegister.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
+        }
     }
 
     private void setupListener() {
+        btnInfoLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAboutDialog.createAboutDialog();
+            }
+        });
+
         tvRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
